@@ -105,7 +105,8 @@ async function installer(nom) {
   if (telechargements[nom]?.statut === "en_cours") return;
   telechargements[nom] = { fait: 0, total: 0, statut: "en_cours" };
   try {
-    const r = await fetch(`${OLLAMA}/api/pull`, { method: "POST", body: JSON.stringify({ name: nom, stream: true }) });
+    const r = await fetch(`${OLLAMA}/api/pull`, { method: "POST", body: JSON.stringify({ model: nom, name: nom, stream: true }) });   // « model » (Ollama récent), « name » (ancien)
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `Ollama HTTP ${r.status}`);
     let reste = "";
     for await (const morceau of r.body) {
       reste += Buffer.from(morceau).toString();
@@ -116,6 +117,7 @@ async function installer(nom) {
         if (d.total) Object.assign(telechargements[nom], { fait: d.completed || 0, total: d.total });
       }
     }
+    if (reste.trim()) { const d = JSON.parse(reste); if (d.error) throw new Error(d.error); }   // dernière ligne sans retour à la ligne
     telechargements[nom] = { statut: "fini" };
     await lireModeles();
     if (!pret()) { config.modele = nom; await sauver(); }                  // premier modèle installé : on l'utilise
@@ -204,7 +206,7 @@ http.createServer(async (req, res) => {
       if (!m) return json(res, 400, { erreur: "Modèle inconnu" });
       if (c.action === "installer") installer(m.nom);
       else if (c.action === "utiliser") { if (!installes.includes(m.nom)) return json(res, 400, { erreur: "Installe-le d'abord" }); config.modele = m.nom; await sauver(); }
-      else if (c.action === "supprimer") { await ollama("/api/delete", { name: m.nom }).catch(() => {}); if (config.modele === m.nom) config.modele = ""; await sauver(); await lireModeles(); }
+      else if (c.action === "supprimer") { await ollama("/api/delete", { model: m.nom, name: m.nom }).catch(() => {}); if (config.modele === m.nom) config.modele = ""; await sauver(); await lireModeles(); }
       reannoncer(); return json(res, 200, etat());
     }
     json(res, 404, { erreur: "Introuvable" });
