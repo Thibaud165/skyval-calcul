@@ -26,7 +26,7 @@ const MODELES = [
 const PAGE = readFileSync(new URL("./page.html", import.meta.url), "utf8");
 
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
-const DEFAUT = { nom: process.env.NOM_MACHINE || "", cle: process.env.SKYVAL_CLE || "", atlas: process.env.ATLAS_URL || "http://100.95.29.38:4601", demarrage: true, usage: 75, modele: "" };
+const DEFAUT = { nom: process.env.NOM_MACHINE || "", cle: process.env.SKYVAL_CLE || "", atlas: process.env.ATLAS_URL || "http://100.95.29.38:4601", demarrage: true, usage: 100, modele: "" };   // 100 % : sinon une carte de 12 Go n'a pas la place du 12b
 let config = { ...DEFAUT };
 try { config = { ...DEFAUT, ...JSON.parse(readFileSync(CONFIG, "utf8")) }; } catch {}
 const sauver = () => fs.mkdir(DATA, { recursive: true }).then(() => fs.writeFile(CONFIG, JSON.stringify(config, null, 2)));
