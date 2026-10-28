@@ -550,8 +550,10 @@ function dessiner(t) {
   if (cw >= 18) {
     const cx = bx + BL + 8, cy = Math.max(18, sol - 52);
     R(cx, cy, cw, sol - cy, "#B9C0CC"); R(cx, cy, cw, 2, "#D6DCE4"); R(cx + cw - 2, cy + 2, 2, sol - cy - 2, "#8E96A4");
-    const fx = cx + Math.floor((cw - 14) / 2), fy = cy + 7, a = Math.floor(t * (calcul ? 14 : 6)) % 2;
-    R(fx, fy, 14, 14, "#4A5160"); R(fx + 6, fy + 6, 2, 2, "#B9C0CC"); R(fx + (a ? 2 : 6), fy + (a ? 6 : 2), a ? 10 : 2, a ? 2 : 10, "#8E96A4");
+    const fx = cx + Math.floor((cw - 14) / 2), fy = cy + 7, m = 6;
+    R(fx, fy, 14, 14, "#4A5160");
+    for (let k = 2; k < 12; k += 2) { const [x, y] = [[m, k], [12 - k, k], [k, m], [k, k]][Math.floor(t * (calcul ? 16 : 8)) % 4]; R(fx + x, fy + y, 2, 2, "#8E96A4"); }   // pale en 4 images : |, /, —, \
+    R(fx + 6, fy + 6, 2, 2, "#B9C0CC");
     R(cx + 4, fy + 20, cw - 8, 2, relie ? "#4ADE80" : "#5A606C");
   }
   // Le sol technique
