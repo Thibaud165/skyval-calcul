@@ -431,6 +431,7 @@ function rendreModeles(b, c) {
       if (m.tient === false) li.append(el("div", "erreur", "Ne tient pas dans ta carte graphique : il tournerait sur le processeur, très lentement. Supprime-le pour libérer le disque."));
       actions.append(bouton("", `supprimer-${m.nom}`, () => confirm(`Supprimer ${m.nom} du disque ?`) && api("/api/modele", { nom: m.nom, action: "supprimer" }), { cls: "icone danger", icone: ICONES.poubelle, aria: `Supprimer ${m.nom}` }));
     } else {
+      if (m.tient === false) li.append(el("div", "detail", `Pour les cartes graphiques d'au moins ${[8, 12, 16, 24, 32, 48].find((t) => t >= m.memoire) || Math.ceil(m.memoire)} Go : rien à faire sur ce PC.`));
       if (m.tient !== false) actions.append(bouton("Installer", `installer-${m.nom}`, () => api("/api/modele", { nom: m.nom, action: "installer" }), { icone: ICONES.telecharger }));
       if (dl?.statut === "erreur") li.append(el("div", "erreur", `Téléchargement raté : ${dl.erreur}`));
     }
