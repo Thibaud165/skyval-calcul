@@ -19,10 +19,10 @@
 | **Tailscale** | installé et connecté (https://tailscale.com/download), avec le partage d'Atlas accepté : l'administrateur de Skyval t'envoie le lien |
 | **Une clé** | une par machine, donnée par l'administrateur de Skyval |
 | **Docker** | voir l'étape 2 |
-| **Disque** | 2 à 20 Go libres selon le modèle choisi |
-| **Conseillé** | une carte graphique NVIDIA avec au moins 6 Go de mémoire. Sans elle, ça marche sur le processeur, mais plus lentement et seulement avec les petits modèles |
+| **Disque** | 7 à 20 Go libres selon le modèle choisi |
+| **Carte graphique** | une carte NVIDIA avec au moins 8 Go de mémoire. Sans elle, Skyval Calcul ne peut pas aider : les modèles assez fiables sont trop lourds pour le processeur seul |
 
-Les cartes AMD et Intel ne sont pas utilisées : le calcul se fait alors sur le processeur.
+Les cartes AMD et Intel ne sont pas utilisées : le PC est alors vu comme sans carte graphique.
 
 ## 2. Installer Docker
 
@@ -152,7 +152,7 @@ curl.exe -fsSLO https://raw.githubusercontent.com/Thibaud165/skyval-calcul/main/
 docker compose up -d
 ```
 
-**Sans carte NVIDIA** :
+**Sans carte NVIDIA** (l'interface marche, mais aucun modèle ne tient : le PC ne prendra pas de calculs) :
 
 ```powershell
 curl.exe -fsSLO https://raw.githubusercontent.com/Thibaud165/skyval-calcul/main/docker-compose.cpu.yml
@@ -174,7 +174,7 @@ curl -fsSLO https://raw.githubusercontent.com/Thibaud165/skyval-calcul/main/dock
 docker compose up -d
 ```
 
-**Sans carte NVIDIA, ou sur Mac** :
+**Sans carte NVIDIA, ou sur Mac** (l'interface marche, mais aucun modèle ne tient : le PC ne prendra pas de calculs) :
 
 ```bash
 curl -fsSLO https://raw.githubusercontent.com/Thibaud165/skyval-calcul/main/docker-compose.cpu.yml
@@ -198,18 +198,25 @@ Ouvre http://localhost:8642 dans ton navigateur.
    - À 50 %, le PC se repose autant de temps qu'il a calculé, et seule la moitié de la mémoire compte pour choisir le modèle.
    Tu peux continuer à utiliser ton PC normalement.
 3. **Tester ma machine** : regarde ta carte graphique, ta mémoire et le curseur, puis conseille un modèle.
-4. **Installer** le modèle conseillé (de 1 à 17 Go à télécharger), puis relance le test : il mesure le temps d'un vote.
+4. **Installer** le modèle conseillé (de 6 à 19 Go à télécharger), puis relance le test : il mesure le temps d'un vote.
 5. **Disponible pour Skyval** : coche. Avec « Disponible dès le démarrage du conteneur », ton PC se rend disponible tout seul à chaque démarrage.
 
 Pendant un calcul, l'interface affiche « Calcul en cours » et les réglages sont bloqués, de quelques secondes à quelques
 minutes : le temps de trier un mail, soit 5 à 10 votes par question.
 
-| Modèle | Mémoire | Pour quel PC |
-|---|---|---|
-| gemma3:1b | 1,5 Go | dépannage, se trompe souvent |
-| gemma3:4b | 4,5 Go | carte de 6 à 8 Go, ou processeur seul |
-| gemma3:12b | 9,5 Go | carte de 12 Go et plus (RTX 3060 12 Go, 4070, 4080…) |
-| gemma3:27b | 19 Go | carte de 24 Go (RTX 3090, 4090…) |
+| Modèle | Téléchargement | Mémoire | Pour quelle carte |
+|---|---|---|---|
+| ministral-3:8b | 6 Go | 7,5 Go | 8 Go, curseur à fond (RTX 3060 Ti, 3070, 4060, 4060 Ti 8 Go…) |
+| gemma3:12b | 8,1 Go | 9,5 Go | 12 Go (RTX 3060 12 Go, 4070, 4070 SUPER…) |
+| ministral-3:14b | 9,1 Go | 10,5 Go | 12 Go curseur à fond, 16 Go (RTX 4060 Ti 16 Go, 4070 Ti SUPER, 4080…) |
+| gemma4:26b | 18,7 Go | 20,5 Go | 24 Go (RTX 3090, 4090, 5090…) |
+
+Le test conseille le plus gros modèle qui tient dans la mémoire autorisée par le curseur. Sans carte graphique, ou avec
+une carte de moins de 8 Go, aucun modèle n'est proposé : les petits modèles se trompent trop pour trier les mails.
+
+Les anciens modèles (gemma3:1b, gemma3:4b, gemma3:27b) ne sont plus utilisés par Skyval. S'ils sont encore installés,
+ils apparaissent sous « Anciens modèles » avec un bouton pour les supprimer du disque, et ce PC ne prend plus de calculs
+tant que l'un d'eux est le modèle utilisé : installe un modèle de la liste.
 
 ## 5. Au quotidien
 
@@ -241,6 +248,8 @@ et une clé différents (ex. « PC fixe (Linux) » et « PC fixe (Windows) »). 
 | `docker compose up` dit « could not select device driver nvidia » | Docker ne voit pas de carte NVIDIA : vérifie avec `docker run --rm --gpus all ubuntu nvidia-smi`, sinon utilise `docker-compose.cpu.yml`. |
 | Linux : « permission denied » sur `docker` | Tu ne t'es pas reconnecté après `usermod`, ou ajoute `sudo` devant la commande. |
 | Un vote prend plus de 20 s | Prends un modèle plus petit, ou monte le curseur. |
+| « Carte trop faible » | Aucun modèle ne tient dans la carte graphique de ce PC (ou Docker ne la voit pas : voir « Aucune » carte graphique ci-dessus). |
+| « Modèle retiré » | Le modèle utilisé n'est plus dans la liste de Skyval : installe un modèle de la liste, puis supprime l'ancien. |
 | http://localhost:8642 ne s'ouvre pas | `docker ps` doit afficher `skyval-calcul`. Sinon, `docker logs skyval-calcul` donne l'erreur. |
 
 ---

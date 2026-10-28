@@ -7,18 +7,21 @@ import { readFileSync } from "node:fs";
 import os from "node:os";
 import { spawn, execFile } from "node:child_process";
 
-const VERSION = "1.1.0";
+const VERSION = "1.2.0";
 const DATA = process.env.DATA || "/data";
 const CONFIG = `${DATA}/config.json`;
 const OLLAMA = process.env.OLLAMA_URL || "http://127.0.0.1:11434";      // OLLAMA_URL : un Ollama déjà lancé ailleurs (tests)
 const PORT = Number(process.env.PORT || 8642);
 const NUM_CTX = 2048;                                                    // un mail + la question tiennent dedans, et ça garde de la mémoire
-// Du plus léger au plus lourd. memoire = Go de carte graphique (ou de RAM) nécessaires, contexte compris
+// Du plus léger au plus lourd. taille = Go à télécharger (quantification par défaut d'Ollama, Q4_K_M),
+// memoire = Go de carte graphique nécessaires, contexte de 2048 compris. pense : modèle qui sait réfléchir avant de
+// répondre : on lui coupe la réflexion, sinon avec 8 jetons au plus il n'écrirait jamais OUI ou NON.
+// Plus de 1b ni de 4b : ils se trompaient trop (0 sur 3 au test du réseau), Atlas les refuse
 const MODELES = [
-  { nom: "gemma3:1b", taille: 0.8, memoire: 1.5, label: "1b · très léger, se trompe souvent" },
-  { nom: "gemma3:4b", taille: 3.3, memoire: 4.5, label: "4b · léger" },
+  { nom: "ministral-3:8b", taille: 6, memoire: 7.5, label: "8b · léger" },
   { nom: "gemma3:12b", taille: 8.1, memoire: 9.5, label: "12b · bon équilibre" },
-  { nom: "gemma3:27b", taille: 17, memoire: 19, label: "27b · le plus sûr, très lourd" },
+  { nom: "ministral-3:14b", taille: 9.1, memoire: 10.5, label: "14b · plus sûr" },
+  { nom: "gemma4:26b", taille: 18.7, memoire: 20.5, label: "26b · le plus sûr, très lourd", pense: true },
 ];
 const PAGE = readFileSync(new URL("./page.html", import.meta.url), "utf8");
 
@@ -52,13 +55,23 @@ async function lireModeles() {
   try { installes = (await ollama("/api/tags", null, 5000)).models.map((m) => m.name); } catch {}
   return installes;
 }
-// Un modèle plus gros que la carte graphique tournerait surtout sur le processeur : très lent, PC à fond. Sans carte : 4b au plus
+// Un modèle plus gros que la carte graphique tournerait surtout sur le processeur : très lent, PC à fond.
+// Sans carte : rien au-dessus de 4 Go à télécharger, donc aucun modèle du catalogue (les petits se trompent trop)
 const tient = (m, mat = materiel) => !mat || (mat.gpu ? m.memoire <= mat.gpu.vram : m.taille < 4);
-const pret = () => Boolean(config.modele && installes.includes(config.modele) && tient(MODELES.find((m) => m.nom === config.modele) || { memoire: 0, taille: 0 }));
+const catalogue = (nom) => MODELES.find((m) => m.nom === nom);
+// Ancien modèle : installé dans Ollama mais plus dans le catalogue (gemma3:1b, gemma3:4b…). On peut seulement le supprimer
+const anciens = () => installes.filter((n) => !catalogue(n));
+// Prêt à calculer : un modèle du catalogue, installé, qui tient dans la carte. Avec un ancien modèle, plus aucun calcul
+const pret = () => { const m = catalogue(config.modele); return Boolean(m && installes.includes(m.nom) && tient(m)); };
 const threads = () => Math.max(1, Math.round(os.cpus().length * config.usage / 100));
 
 async function generer(prompt, options = {}, ms = 300000) {
-  const d = await ollama("/api/generate", { model: config.modele, prompt, stream: false, keep_alive: "30s", options: { ...options, num_ctx: NUM_CTX, num_thread: threads() } }, ms);   // modèle déchargé 30 s après le dernier calcul : la carte graphique se libère vite
+  // Modèle qui réfléchit : think: false (au niveau de la requête, pas dans options). Gemma 4 écrit quand même un bloc de
+  // réflexion vide (4 jetons) avant sa réponse : on lui laisse 16 jetons de plus pour qu'il ne mange pas le OUI ou NON
+  const pense = catalogue(config.modele)?.pense;
+  const opts = { ...options, num_ctx: NUM_CTX, num_thread: threads() };
+  if (pense && opts.num_predict > 0) opts.num_predict += 16;
+  const d = await ollama("/api/generate", { model: config.modele, prompt, stream: false, ...(pense ? { think: false } : {}), keep_alive: "30s", options: opts }, ms);   // modèle déchargé 30 s après le dernier calcul : la carte graphique se libère vite
   return d.response;
 }
 
@@ -76,8 +89,8 @@ async function detecter() {
 const budget = (m) => Math.round((m.gpu ? m.gpu.vram : m.ram / 2) * config.usage / 10) / 10;
 function conseiller(m) {
   const b = budget(m);
-  const possibles = MODELES.filter((x) => x.memoire <= b && (m.gpu || x.taille < 4));   // sans carte graphique : 4b au plus, sinon trop lent
-  return possibles.at(-1)?.nom || null;
+  const possibles = MODELES.filter((x) => x.memoire <= b && (m.gpu || x.taille < 4));   // sans carte graphique : rien au-dessus de 4 Go (aucun aujourd'hui)
+  return possibles.at(-1)?.nom || null;                                   // null : rien ne tient (curseur trop bas, ou carte trop faible)
 }
 const VOTE_TEST = `Un commerçant répond à un mail de Skyval qui lui propose un site web.
 Veut-il avancer avec Skyval ? Réponds par UN seul mot : OUI ou NON
@@ -185,6 +198,7 @@ const json = (res, code, d) => { res.writeHead(code, { "Content-Type": "applicat
 const lireCorps = (req) => new Promise((ok) => { let s = ""; req.on("data", (c) => { s += c; }); req.on("end", () => { try { ok(JSON.parse(s || "{}")); } catch { ok({}); } }); });
 function etat() {
   return { version: VERSION, config: { ...config, cle: config.cle ? `${config.cle.slice(0, 6)}…` : "" }, actif, atlas, reserve: Boolean(reserve), enCalcul, benchEnCours, stats, materiel, installes, telechargements,
+    pret: pret(), anciens: anciens(),
     modeles: MODELES.map((m) => ({ ...m, installe: installes.includes(m.nom), possible: materiel ? m.memoire <= budget(materiel) : null, tient: tient(m) })) };
 }
 http.createServer(async (req, res) => {
@@ -214,8 +228,13 @@ http.createServer(async (req, res) => {
     }
     if (url.pathname === "/api/bench") { if (!benchEnCours) bencher().catch((e) => { config.bench = { erreur: e.message }; }); return json(res, 202, etat()); }
     if (url.pathname === "/api/modele") {
-      const m = MODELES.find((x) => x.nom === c.nom);
-      if (!m) return json(res, 400, { erreur: "Modèle inconnu" });
+      const m = catalogue(c.nom);
+      if (!m) {                                                            // ancien modèle : on peut seulement le supprimer du disque
+        if (c.action !== "supprimer" || typeof c.nom !== "string" || !(await lireModeles()).includes(c.nom)) return json(res, 400, { erreur: "Modèle inconnu" });
+        await ollama("/api/delete", { model: c.nom, name: c.nom });
+        if (config.modele === c.nom) { config.modele = ""; await sauver(); }
+        await lireModeles(); reannoncer(); return json(res, 200, etat());
+      }
       if (c.action === "installer") installer(m.nom);
       else if (c.action === "utiliser") {
         if (!installes.includes(m.nom)) return json(res, 400, { erreur: "Installe-le d'abord" });

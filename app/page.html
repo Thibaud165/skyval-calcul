@@ -159,6 +159,11 @@
   .tag.actuel{background:#163A2A;color:var(--vertv)}
   .tag.conseille{background:#3E2E12;color:#FFC46B}
   .tag.gros{background:#4A1F1F;color:#FFB3A7}
+  .tag.ancien{background:#232B3B;color:#A9B8D3}
+  .sous-titre{margin:1rem 0 0;font:700 .72rem/1.2 var(--pixel);letter-spacing:.08em;text-transform:uppercase;color:var(--texte2)}
+  .modele.ancien .nom code{font:600 .9rem var(--pixel);color:#C9D7F0}
+  .modele.ancien .poids i{background:#141B29;box-shadow:inset 0 0 0 1px #0E1524}
+  .modele.ancien.utilise{box-shadow:inset 4px 0 0 var(--accent)}
   .barre{height:8px;margin-top:4px;background:var(--fond3);box-shadow:0 0 0 2px var(--nuit)}
   .barre b{display:block;height:100%;background:repeating-linear-gradient(90deg,#F2A33D 0 6px,#C67C1E 6px 8px);transition:width .4s steps(4)}
   .pct{font:700 .8rem var(--pixel);color:#FFC46B;white-space:nowrap}
@@ -240,6 +245,10 @@
       <h2 id="t-modeles">Modèles d'IA</h2>
       <p class="aide">Il fait les calculs de Skyval sur ce PC. Plus il est gros, plus il est fiable et lourd.</p>
       <ul id="modeles" class="liste-modeles"></ul>
+      <div id="anciens" hidden>
+        <p class="sous-titre">Anciens modèles</p>
+        <ul id="listeAnciens" class="liste-modeles"></ul>
+      </div>
     </section>
     <section class="carte" aria-labelledby="t-test">
       <h2 id="t-test">Test de la machine <span class="droite"><button class="btn plein" id="bench" type="button">Tester ma machine</button></span></h2>
@@ -308,17 +317,21 @@ async function api(chemin, corps) {
 
 // L'état vu par Atlas, pour la pastille, la baie et la phrase sous la baie
 function lireEtat(e) {
-  const c = e.config, a = e.atlas.etat, pret = Boolean(c.modele && e.installes.includes(c.modele));
+  const c = e.config, a = e.atlas.etat, pret = e.pret;
   if (a === "a_configurer") return ["ambre", "À configurer", "eteint", "Entre le nom de ce PC et sa clé dans Connexion pour le relier à Skyval."];
   if (a === "cle_refusee") return ["rouge", "Clé refusée", "erreur", "Skyval ne reconnaît pas cette clé. Demande la bonne à l'administrateur de Skyval."];
   if (a === "attente") return ["", "Connexion…", "attente", "Ce PC cherche à joindre Atlas, le serveur de Skyval."];
   if (a !== "connecte") return ["rouge", "Atlas injoignable", "erreur", "Atlas, le serveur de Skyval, ne répond pas. Vérifie la connexion internet de ce PC. Nouvel essai toutes les 10 s."];
   if (e.enCalcul || e.reserve) return ["bleu", "Calcul en cours", "calcul", "Skyval utilise ce PC en ce moment. Les réglages reviennent à la fin du calcul."];
   if (!e.actif) return ["", "Indisponible", "desactive", "Skyval n'enverra rien à ce PC tant qu'il est indisponible."];
+  if (!pret && carteTropFaible(e)) return ["rouge", "Carte trop faible", "sans_modele", "Ce PC n'a pas de carte graphique assez puissante pour Skyval : aucun modèle ne tient dedans."];
+  if (!pret && e.anciens.includes(c.modele)) return ["ambre", "Modèle retiré", "sans_modele", `${c.modele} n'est plus utilisé par Skyval : ce PC ne prend plus de calculs. Installe ou utilise un modèle de la liste.`];
   if (!pret) return ["ambre", "Aucun modèle", "sans_modele", "Installe un modèle d'IA pour que Skyval puisse envoyer des calculs à ce PC."];
   return ["vert", "Disponible", "libre", "Connecté à Skyval : ce PC attend le prochain calcul."];
 }
 
+// Aucun modèle du catalogue ne tient dans la carte graphique (ou pas de carte du tout)
+const carteTropFaible = (e) => e.modeles.length > 0 && e.modeles.every((m) => m.tient === false);
 let sigModeles = "", sigBench = "";
 function rendre() {
   if (!e) return;
@@ -339,7 +352,8 @@ function rendre() {
   // Disponibilité
   $("actif").checked = e.actif; $("actif").disabled = bloque;
   $("demarrage").checked = c.demarrage; $("demarrage").disabled = bloque;
-  $("aideActif").textContent = e.actif ? (c.modele && e.installes.includes(c.modele) ? "Skyval peut envoyer des calculs à ce PC." : "Installe un modèle d'IA pour recevoir des calculs.") : "Skyval n'enverra rien à ce PC.";
+  $("aideActif").textContent = !e.actif ? "Skyval n'enverra rien à ce PC." : e.pret ? "Skyval peut envoyer des calculs à ce PC."
+    : carteTropFaible(e) ? "Ce PC n'a pas de carte graphique assez puissante pour Skyval." : e.anciens.includes(c.modele) ? "Utilise un modèle de la liste pour recevoir des calculs." : "Installe un modèle d'IA de la liste pour recevoir des calculs.";
   // Utilisation
   if (document.activeElement !== $("usage")) $("usage").value = c.usage;
   $("usage").disabled = bloque;
@@ -347,11 +361,11 @@ function rendre() {
   // Test de la machine
   $("bench").disabled = bloque || e.benchEnCours; $("bench").textContent = e.benchEnCours ? "Test en cours…" : "Tester ma machine";
   $("bench-res").setAttribute("aria-busy", String(e.benchEnCours));
-  const b = c.bench, s1 = JSON.stringify([b, c.usage, c.modele]);
-  if (s1 !== sigBench) { sigBench = s1; rendreBench(b, c); }
+  const b = c.bench, s1 = JSON.stringify([b, c.usage, c.modele, carteTropFaible(e)]);
+  if (s1 !== sigBench) { sigBench = s1; rendreBench(b, c, carteTropFaible(e)); }
   // Modèles (reconstruits seulement s'ils changent : le focus clavier reste en place)
-  const s2 = JSON.stringify([e.modeles, c.modele, b?.conseille, e.telechargements, bloque]);
-  if (s2 !== sigModeles) { sigModeles = s2; rendreModeles(b, c); }
+  const s2 = JSON.stringify([e.modeles, e.anciens, c.modele, b?.conseille, e.telechargements, bloque]);
+  if (s2 !== sigModeles) { sigModeles = s2; rendreModeles(b, c); rendreAnciens(c); }
   // Statistiques
   $("sCalculs").textContent = e.stats.calculs;
   $("sCalculsL").textContent = e.stats.calculs > 1 ? "calculs faits" : "calcul fait";
@@ -359,7 +373,7 @@ function rendre() {
   $("sVersion").textContent = e.version;
 }
 
-function rendreBench(b, c) {
+function rendreBench(b, c, tropFaible) {
   const res = $("bench-res"); res.replaceChildren();
   if (b?.erreur) { res.append(el("p", "conseil ko", b.erreur)); return; }
   if (!b) {
@@ -380,6 +394,7 @@ function rendreBench(b, c) {
   res.append(g);
   res.append(el("p", b.conseille ? "conseil" : "conseil ko", b.conseille
     ? `Conseillé à ${b.usage} % : ${b.conseille}.${b.secondes > 20 ? " Ton modèle actuel est lent : prends plus petit." : ""}${b.usage !== c.usage ? " (curseur changé : relance le test)" : ""}`
+    : tropFaible ? "Ce PC n'a pas de carte graphique assez puissante pour Skyval : aucun modèle ne tient dedans."
     : "Aucun modèle ne tient dans la mémoire autorisée : monte le curseur."));
 }
 
@@ -421,6 +436,26 @@ function rendreModeles(b, c) {
     }
     liste.append(li);
   });
+  if (focus) liste.querySelector(`[data-cle="${CSS.escape(focus)}"]`)?.focus();
+}
+// Modèles installés que Skyval n'utilise plus (ex. gemma3:4b) : seulement un bouton pour libérer le disque
+function rendreAnciens(c) {
+  const liste = $("listeAnciens"), focus = document.activeElement?.dataset?.cle;
+  $("anciens").hidden = !e.anciens.length;
+  liste.replaceChildren();
+  for (const nom of e.anciens) {
+    const li = el("li", "modele tuile ancien"), utilise = c.modele === nom;
+    if (utilise) li.classList.add("utilise");
+    const poids = el("div", "poids"); poids.setAttribute("aria-hidden", "true");
+    for (let k = 0; k < 4; k++) poids.append(el("i"));
+    const info = el("div"), titre = el("div", "nom"); titre.append(el("code", null, nom), el("span", "tag ancien", "ancien"));
+    if (utilise) titre.append(el("span", "tag gros", "utilisé, en pause"));
+    info.append(titre, el("div", "detail", utilise ? "Ancien modèle, plus utilisé par Skyval : ce PC ne prend plus de calculs avec lui." : "Ancien modèle, plus utilisé par Skyval."));
+    const actions = el("div", "actions");
+    actions.append(bouton("", `supprimer-${nom}`, () => confirm(`Supprimer ${nom} du disque ?`) && api("/api/modele", { nom, action: "supprimer" }), { cls: "icone danger", icone: ICONES.poubelle, aria: `Supprimer ${nom}` }));
+    li.append(poids, info, actions);
+    liste.append(li);
+  }
   if (focus) liste.querySelector(`[data-cle="${CSS.escape(focus)}"]`)?.focus();
 }
 function bouton(txt, cle, f, { cls = "", icone = null, aria = null } = {}) {
