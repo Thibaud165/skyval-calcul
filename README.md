@@ -249,6 +249,7 @@ et une clé différents (ex. « PC fixe (Linux) » et « PC fixe (Windows) »). 
 
 | Ce que tu vois | Quoi faire |
 |---|---|
+| Windows : « failed to connect to the docker API at npipe:… dockerDesktopLinuxEngine » (souvent avec « unable to get image ») | Docker Desktop n'est pas démarré : ouvre-le, attends « Engine running », puis relance `docker compose up -d`. S'il ne démarre pas : étapes 2a et 2b (virtualisation, WSL). |
 | « Atlas injoignable » | Tailscale est-il connecté ? Le partage d'Atlas est-il accepté ? Teste `ping 100.95.29.38`. |
 | « Clé refusée » | La clé est mal collée, ou elle a été supprimée : demande-en une nouvelle à l'administrateur. |
 | Windows : Docker Desktop affiche « WSL 2 installation is incomplete » ou ne démarre pas | Relance `wsl --update` dans PowerShell (administrateur), redémarre, et vérifie que la virtualisation est activée (étape 2a). |
