@@ -25,6 +25,8 @@
   }
   html{font-size:clamp(13px,.45vw + 7.5px,16px)}
   *{box-sizing:border-box}
+  body{-webkit-user-select:none;user-select:none}                         /* rien à copier sur cette page… */
+  input,textarea{-webkit-user-select:text;user-select:text}               /* …sauf ce qu'on tape (nom, clé, adresse) */
   [hidden]{display:none !important}
   body{margin:0;min-height:100vh;color:var(--texte);font:400 1rem/1.45 var(--plex);
     background:#121A2A linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px) 0 0/24px 24px,#121A2A linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px) 0 0/24px 24px}
@@ -168,7 +170,7 @@
   .barre b{display:block;height:100%;background:repeating-linear-gradient(90deg,#F2A33D 0 6px,#C67C1E 6px 8px);transition:width .4s steps(4)}
   .pct{font:700 .8rem var(--pixel);color:#FFC46B;white-space:nowrap}
 
-  /* Test de la machine */
+  /* Cette machine (matériel, conseil, vitesse) */
   .vide-test{display:flex;align-items:center;gap:12px;padding:.8rem;background:var(--fond3);box-shadow:inset 0 3px 0 rgba(0,0,0,.3);font-size:.9rem;color:var(--texte2)}
   .vide-test svg{width:22px;height:22px;stroke:#7CC4FF;stroke-width:1.8;fill:none;stroke-linecap:square;flex:none}
   #bench-res .tuiles{margin-top:.2rem}
@@ -251,8 +253,8 @@
       </div>
     </section>
     <section class="carte" aria-labelledby="t-test">
-      <h2 id="t-test">Test de la machine <span class="droite"><button class="btn plein" id="bench" type="button">Tester ma machine</button></span></h2>
-      <p class="aide" id="benchAide">Mesure ta machine et conseille un modèle selon le curseur.</p>
+      <h2 id="t-test">Cette machine</h2>
+      <p class="aide" id="benchAide">Ce que Skyval voit de ce PC et le modèle conseillé selon le curseur. La vitesse se mesure toute seule, sur les vrais calculs.</p>
       <div id="bench-res" aria-live="polite"></div>
     </section>
   </div>
@@ -358,10 +360,8 @@ function rendre() {
   if (document.activeElement !== $("usage")) $("usage").value = c.usage;
   $("usage").disabled = bloque;
   majUsage(Number($("usage").value));
-  // Test de la machine
-  $("bench").disabled = bloque || e.benchEnCours; $("bench").textContent = e.benchEnCours ? "Test en cours…" : "Tester ma machine";
-  $("bench-res").setAttribute("aria-busy", String(e.benchEnCours));
-  const b = c.bench, s1 = JSON.stringify([b, c.usage, c.modele, carteTropFaible(e)]);
+  // Cette machine : détectée au démarrage, conseil et vitesse calculés par le PC
+  const b = e.bench, s1 = JSON.stringify([b, c.usage, c.modele, carteTropFaible(e)]);
   if (s1 !== sigBench) { sigBench = s1; rendreBench(b, c, carteTropFaible(e)); }
   // Modèles (reconstruits seulement s'ils changent : le focus clavier reste en place)
   const s2 = JSON.stringify([e.modeles, e.anciens, c.modele, b?.conseille, e.telechargements, bloque]);
@@ -375,10 +375,9 @@ function rendre() {
 
 function rendreBench(b, c, tropFaible) {
   const res = $("bench-res"); res.replaceChildren();
-  if (b?.erreur) { res.append(el("p", "conseil ko", b.erreur)); return; }
   if (!b) {
     const v = el("div", "vide-test"); v.innerHTML = ICONES.puce;
-    v.append(el("span", null, "Pas encore testée. Le test regarde la carte graphique, le processeur et la mémoire, puis mesure la vitesse avec le modèle utilisé."));
+    v.append(el("span", null, "Détection de la carte graphique, du processeur et de la mémoire…"));
     res.append(v); return;
   }
   const g = el("div", "tuiles t3");
@@ -387,13 +386,13 @@ function rendreBench(b, c, tropFaible) {
     [`${b.cpus} cœurs`, b.cpu || "processeur"],
     [`${fr(b.ram)} Go`, "RAM"],
     [`${fr(b.budget)} Go`, `mémoire autorisée à ${b.usage} %`],
-    b.secondes != null ? [`${fr(b.secondes)} s`, `par vote avec ${b.modele}`] : ["–", "vitesse : installe un modèle puis relance le test"],
+    b.secondes != null ? [`${fr(b.secondes)} s`, `par vote avec ${b.modele}`] : ["–", b.modele ? "vitesse : mesurée au premier calcul" : "vitesse : installe un modèle"],
     [b.conseille || "Aucun", `modèle conseillé à ${b.usage} %`],
   ];
   for (const [v, l] of cases) { const d = el("div", "tuile"); d.append(el("b", null, v), el("span", null, l)); g.append(d); }
   res.append(g);
   res.append(el("p", b.conseille ? "conseil" : "conseil ko", b.conseille
-    ? `Conseillé à ${b.usage} % : ${b.conseille}.${b.secondes > 20 ? " Ton modèle actuel est lent : prends plus petit." : ""}${b.usage !== c.usage ? " (curseur changé : relance le test)" : ""}`
+    ? `Conseillé à ${b.usage} % : ${b.conseille}.${b.secondes > 20 ? " Ton modèle actuel est lent : prends plus petit." : ""}`
     : tropFaible ? "Ce PC n'a pas de carte graphique assez puissante pour Skyval : aucun modèle ne tient dedans."
     : "Aucun modèle ne tient dans la mémoire autorisée : monte le curseur."));
 }
@@ -492,7 +491,6 @@ $("actif").onchange = async () => { const d = await api("/api/reglages", { actif
 $("demarrage").onchange = async () => { const d = await api("/api/reglages", { demarrage: $("demarrage").checked }); if (d) e = d; rendre(); };
 $("usage").oninput = () => majUsage(Number($("usage").value));
 $("usage").onchange = async () => { const d = await api("/api/reglages", { usage: Number($("usage").value) }); if (d) e = d; rendre(); };
-$("bench").onclick = async () => { const d = await api("/api/bench", {}); if (d) { e = d; rendre(); } };
 
 // ---------- La baie : ce PC dessiné comme une baie du data center de l'immeuble ----------
 // Voyants : vert disponible, bleu et orange qui clignotent en calcul, ambre indisponible, éteinte sans connexion

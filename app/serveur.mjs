@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import os from "node:os";
 import { spawn, execFile } from "node:child_process";
 
-const VERSION = "1.3.0";
+const VERSION = "1.4.0";
 const DATA = process.env.DATA || "/data";
 const CONFIG = `${DATA}/config.json`;
 const OLLAMA = process.env.OLLAMA_URL || "http://127.0.0.1:11434";      // OLLAMA_URL : un Ollama déjà lancé ailleurs (tests)
@@ -26,7 +26,7 @@ const MODELES = [
 const PAGE = readFileSync(new URL("./page.html", import.meta.url), "utf8");
 
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
-const DEFAUT = { nom: process.env.NOM_MACHINE || "", cle: process.env.SKYVAL_CLE || "", atlas: process.env.ATLAS_URL || "http://100.95.29.38:4601", demarrage: true, usage: 75, modele: "", bench: null };
+const DEFAUT = { nom: process.env.NOM_MACHINE || "", cle: process.env.SKYVAL_CLE || "", atlas: process.env.ATLAS_URL || "http://100.95.29.38:4601", demarrage: true, usage: 75, modele: "" };
 let config = { ...DEFAUT };
 try { config = { ...DEFAUT, ...JSON.parse(readFileSync(CONFIG, "utf8")) }; } catch {}
 const sauver = () => fs.mkdir(DATA, { recursive: true }).then(() => fs.writeFile(CONFIG, JSON.stringify(config, null, 2)));
@@ -34,8 +34,16 @@ const sauver = () => fs.mkdir(DATA, { recursive: true }).then(() => fs.writeFile
 let actif = config.demarrage;                                            // « disponible » maintenant (au démarrage : le réglage)
 let atlas = { etat: "attente", erreur: null, vu: 0 };                    // connecte · injoignable · cle_refusee · a_configurer
 let reserve = null;                                                      // Atlas nous a réservé pour un mail : réglages bloqués
-let enCalcul = false, benchEnCours = false;
+let enCalcul = false;
 const stats = { calculs: 0, dernier: null, secondes: null };
+// Vitesse : la médiane des 20 derniers vrais votes faits avec le modèle utilisé (le 1er après un chargement est long :
+// la médiane l'ignore). Pas de vote encore : null, « pas encore mesurée »
+let mesures = { modele: null, durees: [] };
+function vitesse() {
+  if (mesures.modele !== config.modele || !mesures.durees.length) return null;
+  const d = [...mesures.durees].sort((a, b) => a - b);
+  return Math.round(d[Math.floor(d.length / 2)] / 100) / 10;
+}
 const telechargements = {};                                              // modèle → { fait, total, statut, erreur }
 let installes = [];                                                      // modèles présents dans Ollama
 let materiel = null;
@@ -92,34 +100,6 @@ function conseiller(m) {
   const possibles = MODELES.filter((x) => x.memoire <= b && (m.gpu || x.taille < 4));   // sans carte graphique : rien au-dessus de 4 Go (aucun aujourd'hui)
   return possibles.at(-1)?.nom || null;                                   // null : rien ne tient (curseur trop bas, ou carte trop faible)
 }
-const VOTE_TEST = `Un commerçant répond à un mail de Skyval qui lui propose un site web.
-Veut-il avancer avec Skyval ? Réponds par UN seul mot : OUI ou NON
-
-Message du commerçant :
-"""
-Bonjour, merci pour la démo, elle est vraiment réussie. Combien ça coûterait pour la mettre en ligne ?
-"""
-Ton mot :`;
-async function bencher() {
-  benchEnCours = true;
-  try {
-    materiel = await detecter();
-    let secondes = null;
-    if (pret()) {
-      try {
-        await generer(VOTE_TEST, { num_predict: 4 }, 120000);               // chargement du modèle (2 min max), pas compté
-        const debut = Date.now();
-        for (let i = 0; i < 3; i++) await generer(VOTE_TEST, { temperature: 0.7, num_predict: 8 }, 60000);
-        secondes = Math.round((Date.now() - debut) / 300) / 10;
-      } catch (e) {
-        await ollama("/api/generate", { model: config.modele, keep_alive: 0 }, 10000).catch(() => {});   // on libère la mémoire
-        throw new Error(e.name === "TimeoutError" ? `${config.modele} est trop lent sur cette machine : prends un modèle plus petit.` : e.message);
-      }
-    }
-    config.bench = { le: new Date().toISOString(), ...materiel, usage: config.usage, budget: budget(materiel), conseille: conseiller(materiel), modele: pret() ? config.modele : null, secondes };
-    await sauver();
-  } finally { benchEnCours = false; }
-}
 
 async function installer(nom) {
   if (telechargements[nom]?.statut === "en_cours") return;
@@ -145,7 +125,7 @@ async function installer(nom) {
 }
 
 // ---------- Atlas : on s'annonce et on attend un calcul (attente longue, 25 s max côté Atlas) ----------
-const annonce = () => ({ nom: config.nom, version: VERSION, actif: actif && pret(), modele: config.modele || null, usage: config.usage, gpu: config.bench?.gpu?.nom || materiel?.gpu?.nom || null, vram: config.bench?.gpu?.vram || materiel?.gpu?.vram || null, secondes: config.bench?.modele === config.modele ? config.bench.secondes : null, calculs: stats.calculs, reserve: Boolean(reserve) });
+const annonce = () => ({ nom: config.nom, version: VERSION, actif: actif && pret(), modele: config.modele || null, usage: config.usage, gpu: materiel?.gpu?.nom || null, vram: materiel?.gpu?.vram || null, secondes: vitesse(), calculs: stats.calculs, reserve: Boolean(reserve) });
 async function atlasPost(chemin, corps, ms, signal) {
   return fetch(`${config.atlas.replace(/\/$/, "")}${chemin}`, { method: "POST", headers: { "Content-Type": "application/json", "X-Calcul-Cle": config.cle }, body: JSON.stringify(corps), signal: signal ? AbortSignal.any([AbortSignal.timeout(ms), signal]) : AbortSignal.timeout(ms) });
 }
@@ -186,6 +166,10 @@ async function calculer(t) {
   catch (e) { resultat = { id: t.id, erreur: e.message }; }
   const duree = Date.now() - debut;
   stats.calculs++; stats.dernier = new Date().toISOString(); stats.secondes = Math.round(duree / 100) / 10;
+  if (!resultat.erreur) {
+    if (mesures.modele !== config.modele) mesures = { modele: config.modele, durees: [] };
+    mesures.durees = [...mesures.durees, duree].slice(-20);
+  }
   await atlasPost("/calcul/resultat", resultat, 15000).catch(() => {});
   enCalcul = false;
   // Curseur d'utilisation : à 50 %, le PC se repose autant qu'il a calculé (30 s max)
@@ -197,7 +181,8 @@ async function calculer(t) {
 const json = (res, code, d) => { res.writeHead(code, { "Content-Type": "application/json; charset=utf-8" }); res.end(JSON.stringify(d)); };
 const lireCorps = (req) => new Promise((ok) => { let s = ""; req.on("data", (c) => { s += c; }); req.on("end", () => { try { ok(JSON.parse(s || "{}")); } catch { ok({}); } }); });
 function etat() {
-  return { version: VERSION, config: { ...config, cle: config.cle ? `${config.cle.slice(0, 6)}…` : "" }, actif, atlas, reserve: Boolean(reserve), enCalcul, benchEnCours, stats, materiel, installes, telechargements,
+  const bench = materiel && { ...materiel, usage: config.usage, budget: budget(materiel), conseille: conseiller(materiel), modele: pret() ? config.modele : null, secondes: pret() ? vitesse() : null };
+  return { bench, version: VERSION, config: { ...config, cle: config.cle ? `${config.cle.slice(0, 6)}…` : "" }, actif, atlas, reserve: Boolean(reserve), enCalcul, stats, materiel, installes, telechargements,
     pret: pret(), anciens: anciens(),
     modeles: MODELES.map((m) => ({ ...m, installe: installes.includes(m.nom), possible: materiel ? m.memoire <= budget(materiel) : null, tient: tient(m) })) };
 }
@@ -226,7 +211,6 @@ http.createServer(async (req, res) => {
       if (Number.isFinite(c.usage)) config.usage = Math.min(100, Math.max(10, Math.round(c.usage / 5) * 5));
       await sauver(); reannoncer(); return json(res, 200, etat());
     }
-    if (url.pathname === "/api/bench") { if (!benchEnCours) bencher().catch((e) => { config.bench = { erreur: e.message }; }); return json(res, 202, etat()); }
     if (url.pathname === "/api/modele") {
       const m = catalogue(c.nom);
       if (!m) {                                                            // ancien modèle : on peut seulement le supprimer du disque
@@ -252,6 +236,7 @@ if (!process.env.OLLAMA_URL) lancerOllama();
 (async () => {
   for (let i = 0; i < 30 && !(await lireModeles()).length && !(await fetch(OLLAMA).then((r) => r.ok).catch(() => false)); i++) await dormir(1000);
   materiel = await detecter();
+  setInterval(async () => { if (!materiel?.gpu) materiel = await detecter(); }, 300000);   // carte pas vue au démarrage (pilote lent) : on réessaie
   setInterval(lireModeles, 30000);
   boucleAtlas();
 })();

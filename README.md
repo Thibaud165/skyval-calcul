@@ -210,8 +210,9 @@ Ouvre http://localhost:8642 dans ton navigateur.
    - À 100 %, aucune pause, et toute la mémoire de la carte graphique compte.
    - À 50 %, le PC se repose autant de temps qu'il a calculé, et seule la moitié de la mémoire compte pour choisir le modèle.
    Tu peux continuer à utiliser ton PC normalement.
-3. **Tester ma machine** : regarde ta carte graphique, ta mémoire et le curseur, puis conseille un modèle.
-4. **Installer** le modèle conseillé (8 ou 19 Go à télécharger), puis relance le test : il mesure le temps d'un vote.
+3. **Cette machine** : la page montre ta carte graphique, ta mémoire et le modèle conseillé selon le curseur (rien à lancer).
+4. **Installer** le modèle conseillé (8 ou 19 Go à télécharger), puis **Utiliser**. Le temps d'un vote se mesure tout seul,
+   sur les vrais calculs de Skyval.
 5. **Disponible pour Skyval** : coche. Avec « Disponible dès le démarrage du conteneur », ton PC se rend disponible tout seul à chaque démarrage.
 
 Pendant un calcul, l'interface affiche « Calcul en cours » et les réglages sont bloqués, de quelques secondes à quelques
