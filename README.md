@@ -1,108 +1,211 @@
 # Skyval Calcul
 
+Skyval Calcul prête la carte graphique de ton PC à Skyval, une petite agence : elle y fait tourner une IA qui trie des mails, quelques secondes à quelques minutes à la fois.
+
+**Il te faut** : Windows 10, Windows 11 ou Ubuntu · une carte graphique NVIDIA avec **au moins 12 Go** de mémoire · Tailscale avec le partage d'Atlas accepté · la clé donnée par l'administrateur de Skyval.
+
+**Temps** : environ 30 minutes la première fois, surtout des téléchargements. Ensuite, tout se lance tout seul.
+
+> ⚠️ **Sans carte NVIDIA d'au moins 12 Go, ce n'est pas la peine d'installer.** Les cartes AMD et Intel, et les cartes NVIDIA plus petites (8 Go, 10 Go…), ne reçoivent aucun calcul : les IA assez fiables pour Skyval sont trop lourdes pour elles.
+
 ## Sommaire
 
-1. [Ce qu'il te faut](#1-ce-quil-te-faut)
-2. [Installer Docker](#2-installer-docker) : [Windows](#windows-10-et-11) · [Linux](#linux) · [macOS](#macos)
-3. [Lancer Skyval Calcul](#3-lancer-skyval-calcul)
-4. [Régler dans l'interface](#4-régler-dans-linterface)
+1. [Avant de commencer](#1-avant-de-commencer)
+2. [Installer sur Windows 10 ou 11](#2-installer-sur-windows-10-ou-11)
+3. [Installer sur Ubuntu](#3-installer-sur-ubuntu)
+4. [Régler Skyval Calcul](#4-régler-skyval-calcul)
 5. [Au quotidien](#5-au-quotidien)
 6. [Ça ne marche pas](#6-ça-ne-marche-pas)
 7. [Pour l'administrateur de Skyval](#7-pour-ladministrateur-de-skyval)
 
 ---
 
-## 1. Ce qu'il faut
+## 1. Avant de commencer
 
-| **Outils** | Informations |
-|---|---|
-| **Tailscale** | installé et connecté (https://tailscale.com/download), avec le partage d'Atlas accepté : l'administrateur de Skyval t'envoie le lien |
-| **Une clé** | une par machine, donnée par l'administrateur de Skyval |
-| **Docker** | voir l'étape 2 |
-| **Disque** | 7 à 20 Go libres selon le modèle choisi |
-| **Carte graphique** | une carte NVIDIA avec au moins 12 Go de mémoire. Sans elle, Skyval Calcul ne peut pas aider : les modèles assez fiables sont trop lourds pour une petite carte ou le processeur seul |
+### 1.1 Vérifier ta carte graphique
 
-Les cartes AMD et Intel ne sont pas utilisées : le PC est alors vu comme sans carte graphique.
+**Sur Windows** : appuie en même temps sur **Ctrl + Maj + Échap** (le Gestionnaire des tâches s'ouvre). Va dans l'onglet **Performance**, puis clique sur **GPU** (s'il y en a deux, prends celui qui s'appelle NVIDIA).
 
-## 2. Installer Docker
+✅ Tu dois voir un nom qui commence par **NVIDIA** et, en bas, **Mémoire GPU dédiée** de **12,0 Go** ou plus.
 
-### Windows 10 et 11
+**Sur Ubuntu** : la commande `nvidia-smi` (voir l'[étape 3.2](#32-vérifier-le-pilote-nvidia)) affiche ta carte et sa mémoire.
 
-Docker a besoin de **WSL 2** (le sous-système Linux de Windows). Il faut l'installer en premier.
+Exemples de cartes qui marchent : RTX 3060 12 Go, RTX 4060 Ti 16 Go, RTX 4070, 4080, 3090, 4090, 5090…
 
-**a. Vérifier que la virtualisation est activée**
+### 1.2 Installer Tailscale
 
-Gestionnaire des tâches (Ctrl + Maj + Échap) → Performance → Processeur → en bas à droite, « Virtualisation : Activé ».
-Si elle est désactivée, active-la dans le BIOS : « SVM Mode » pour un processeur AMD, « Intel VT-x » ou « Virtualization
-Technology » pour un Intel. Redémarre ensuite.
+Tailscale est un réseau privé : il relie ton PC à Atlas, le serveur de Skyval.
 
-**b. Installer WSL 2**
+1. Télécharge Tailscale sur https://tailscale.com/download et installe-le.
+2. Ouvre-le et connecte-toi (avec un compte Google, Microsoft ou autre).
+3. Ouvre le lien de partage que l'administrateur de Skyval t'a envoyé, et clique sur **Accept** (accepter).
 
-Clic droit sur le menu Démarrer → « Terminal (administrateur) » ou « Windows PowerShell (administrateur) », puis :
+✅ C'est bon quand l'icône Tailscale (près de l'horloge, en bas à droite sur Windows) indique que tu es connecté.
+
+### 1.3 Garder ta clé sous la main
+
+L'administrateur de Skyval te donne **une clé** (une longue suite de lettres et de chiffres). Elle ne sert qu'à **un** PC. Garde-la de côté : tu la colleras à l'[étape 4.2](#42-relier-ton-pc-à-skyval).
+
+Il te faut aussi environ **20 Go libres** sur ton disque.
+
+---
+
+## 2. Installer sur Windows 10 ou 11
+
+Sur Ubuntu ? Passe directement à l'[étape 3](#3-installer-sur-ubuntu).
+
+Trois mots que tu vas croiser :
+- **PowerShell** (ou **Terminal**) : la fenêtre où on tape des commandes.
+- **WSL** : un petit Linux caché dans Windows, dont Docker a besoin.
+- **Docker** : le logiciel qui fait tourner Skyval Calcul.
+
+**Comment copier une commande** : passe la souris sur le bloc gris, clique sur l'icône de copie en haut à droite du bloc. Dans PowerShell, colle avec **clic droit** (ou **Ctrl + V**), puis appuie sur **Entrée**. Une seule commande à la fois.
+
+**Comment ouvrir PowerShell en administrateur** (demandé à certaines étapes) : fais un **clic droit sur le bouton Démarrer** (le logo Windows en bas), puis clique sur **Terminal (administrateur)**. Sur Windows 10, c'est **Windows PowerShell (administrateur)**. Windows demande « Voulez-vous autoriser cette application… » : clique sur **Oui**.
+
+### 2.1 Vérifier la virtualisation
+
+1. Appuie sur **Ctrl + Maj + Échap** (le Gestionnaire des tâches s'ouvre).
+2. Va dans l'onglet **Performance**, puis clique sur **Processeur** (ou **CPU**).
+3. Regarde en bas à droite la ligne **Virtualisation**.
+
+✅ Tu dois voir **Virtualisation : Activé**. Passe à l'étape suivante.
+
+⚠️ Si c'est **Désactivé**, il faut l'activer dans le BIOS (le menu qui s'affiche avant Windows) : redémarre le PC et appuie plusieurs fois sur **Suppr** ou **F2** dès l'allumage. Cherche **SVM Mode** (processeur AMD) ou **Intel VT-x** / **Virtualization Technology** (processeur Intel), mets-le sur **Enabled**, puis enregistre et quitte (souvent **F10**). Si tu n'es pas à l'aise, demande de l'aide à l'administrateur de Skyval.
+
+### 2.2 Installer WSL
+
+1. Ouvre PowerShell **en administrateur** (voir plus haut).
+2. Copie et colle cette commande, puis **Entrée** :
 
 ```powershell
 wsl --install
 ```
 
-Redémarre le PC quand c'est fini. Au redémarrage, une fenêtre Ubuntu peut s'ouvrir et demander un nom d'utilisateur et
-un mot de passe : choisis-en un (il ne sert qu'à ce Linux). Ensuite, mets WSL à jour et vérifie la version :
+3. Attends la fin (quelques minutes), puis **redémarre le PC**.
+4. Au redémarrage, une fenêtre **Ubuntu** peut s'ouvrir et demander un nom d'utilisateur et un mot de passe. Choisis-en un simple (il ne sert qu'à ce petit Linux, note-le quelque part). Pendant que tu tapes le mot de passe, rien ne s'affiche : c'est normal. Ferme ensuite cette fenêtre.
+5. Rouvre PowerShell **en administrateur** et mets WSL à jour :
 
 ```powershell
 wsl --update
 ```
 
-```powershell
-wsl --status
-```
+✅ Tu dois voir un message qui dit que la mise à jour est faite, ou que la dernière version est déjà installée.
 
-La ligne « Version par défaut : 2 » (ou « Default Version: 2 ») doit apparaître. Si c'est 1 :
+### 2.3 Limiter la mémoire de WSL
 
-```powershell
-wsl --set-default-version 2
-```
+Sans ce réglage, WSL peut garder plus de 15 Go de mémoire pour lui, même quand rien ne tourne. L'IA tourne dans la carte graphique, pas dans la mémoire du PC : 10 Go suffisent.
 
-**c. Pilote de la carte graphique**
-
-Avec une carte NVIDIA : installe le dernier pilote **Windows** (GeForce Experience, NVIDIA App ou nvidia.com). Il sert
-aussi à WSL. N'installe **aucun** pilote NVIDIA à l'intérieur d'Ubuntu/WSL.
-
-**d. Installer Docker Desktop**
-
-1. Télécharge Docker Desktop : https://www.docker.com/products/docker-desktop/
-2. À l'installation, laisse coché « Use WSL 2 instead of Hyper-V ».
-3. Redémarre si on te le demande, ouvre Docker Desktop, accepte les conditions, et attends « Engine running » en bas à gauche.
-4. Pour qu'il se lance avec Windows : Settings → General → « Start Docker Desktop when you sign in to your computer ».
-
-Vérifie dans PowerShell :
-
-```powershell
-docker run --rm hello-world
-```
-
-Avec une carte NVIDIA, vérifie aussi que Docker la voit :
-
-```powershell
-docker run --rm --gpus all ubuntu nvidia-smi
-```
-
-Le nom de ta carte doit s'afficher.
-
-**e. Limiter la mémoire de WSL (conseillé)**
-
-Par défaut, WSL garde pour lui la mémoire qu'il a utilisée (le processus « VmmemWSL » du Gestionnaire des tâches peut
-dépasser 15 Go), même quand rien ne tourne. Le modèle d'IA tourne dans la carte graphique, pas dans la RAM : 10 Go
-suffisent. Dans PowerShell :
+1. Dans PowerShell (administrateur ou non), copie et colle cette commande, puis **Entrée** :
 
 ```powershell
 Set-Content -Path "$env:USERPROFILE\.wslconfig" -Value "[wsl2]`nmemory=10GB`n`n[experimental]`nautoMemoryReclaim=dropcache"
 ```
 
-Puis quitte Docker Desktop, lance `wsl --shutdown`, et rouvre Docker Desktop. WSL ne prendra plus que 10 Go au plus
-et rendra la mémoire à Windows quand il n'a rien à faire.
+2. Puis celle-ci, pour que WSL prenne le réglage :
 
-### Linux
+```powershell
+wsl --shutdown
+```
 
-Pour Ubuntu, Debian, Fedora, Linux Mint et la plupart des autres distributions :
+✅ Rien ne s'affiche : c'est normal, c'est bon.
+
+### 2.4 Mettre à jour le pilote NVIDIA
+
+Le pilote est le logiciel qui fait marcher ta carte graphique. Il doit être récent.
+
+1. Ouvre **NVIDIA App** (ou **GeForce Experience** sur les PC plus anciens). Si tu n'as ni l'un ni l'autre, va sur https://www.nvidia.com/fr-fr/drivers/ et télécharge le pilote de ta carte.
+2. Va dans **Pilotes**, puis installe la dernière version proposée.
+
+✅ Tu dois voir que ton pilote est à jour.
+
+⚠️ N'installe **aucun** pilote NVIDIA dans la fenêtre Ubuntu : le pilote Windows suffit, il sert aussi à WSL.
+
+### 2.5 Installer Docker Desktop
+
+1. Va sur https://www.docker.com/products/docker-desktop/ et clique sur **Download for Windows - AMD64**.
+2. Ouvre le fichier téléchargé (**Docker Desktop Installer.exe**). Windows demande l'autorisation : **Oui**.
+3. Sur l'écran **Configuration**, laisse coché **Use WSL 2 instead of Hyper-V**, puis clique sur **OK**.
+4. À la fin, clique sur **Close** (ou **Close and restart** : le PC redémarre).
+
+✅ Tu dois voir l'icône de Docker Desktop (une baleine) dans le menu Démarrer.
+
+### 2.6 Ouvrir Docker Desktop
+
+1. Ouvre **Docker Desktop** depuis le menu Démarrer.
+2. Accepte les conditions (**Accept**). S'il te propose de te connecter ou de créer un compte, clique sur **Skip** (passer) : pas besoin de compte.
+3. Attends.
+
+✅ Tu dois voir **Engine running** en bas à gauche de la fenêtre de Docker Desktop (avec un point vert).
+
+### 2.7 Lancer Docker Desktop avec Windows
+
+1. Dans Docker Desktop, clique sur la **roue dentée** en haut à droite (Settings).
+2. Dans **General**, coche **Start Docker Desktop when you sign in to your computer**.
+3. Clique sur **Apply** (ou **Apply & restart**).
+
+✅ Docker Desktop démarrera tout seul à chaque allumage du PC. Skyval Calcul aussi, du coup.
+
+### 2.8 Vérifier que Docker voit ta carte
+
+1. Ouvre PowerShell (pas besoin d'administrateur : clic sur Démarrer, tape `powershell`, puis **Entrée**).
+2. Copie et colle cette commande, puis **Entrée** :
+
+```powershell
+docker run --rm --gpus all ubuntu nvidia-smi
+```
+
+✅ Après un petit téléchargement, tu dois voir un tableau avec le **nom de ta carte** (par exemple « NVIDIA GeForce RTX 3060 »).
+
+⚠️ Si tu vois une erreur à la place, regarde [Ça ne marche pas](#6-ça-ne-marche-pas).
+
+### 2.9 Créer le dossier skyval-calcul
+
+1. Ouvre l'**Explorateur de fichiers** (l'icône en forme de dossier jaune).
+2. Va dans **Documents**.
+3. Fais un clic droit dans une zone vide → **Nouveau** → **Dossier**, et appelle-le `skyval-calcul`.
+4. Ouvre ce dossier (double-clic).
+
+✅ Tu dois voir un dossier vide, et `skyval-calcul` dans la barre d'adresse en haut.
+
+### 2.10 Ouvrir un terminal dans ce dossier
+
+1. Dans l'Explorateur, toujours dans le dossier `skyval-calcul`, clique dans la **barre d'adresse** en haut (là où le chemin est écrit).
+2. Efface ce qui est écrit, tape `powershell`, puis **Entrée**.
+
+✅ Une fenêtre PowerShell s'ouvre, et la ligne se termine par `\skyval-calcul>`.
+
+(Sur Windows 11, tu peux aussi faire un clic droit dans le dossier → **Ouvrir dans le Terminal**.)
+
+### 2.11 Télécharger Skyval Calcul
+
+Dans cette fenêtre, copie et colle cette commande, puis **Entrée** :
+
+```powershell
+curl.exe -fsSLO https://raw.githubusercontent.com/Thibaud165/skyval-calcul/main/docker-compose.yml
+```
+
+✅ Rien ne s'affiche, et un fichier **docker-compose.yml** apparaît dans le dossier `skyval-calcul`.
+
+### 2.12 Lancer Skyval Calcul
+
+Toujours dans la même fenêtre :
+
+```powershell
+docker compose up -d
+```
+
+✅ Le premier lancement télécharge environ 4 Go (quelques minutes). À la fin, tu dois voir **Container skyval-calcul Started**.
+
+C'est installé. Passe aux [réglages](#4-régler-skyval-calcul).
+
+---
+
+## 3. Installer sur Ubuntu
+
+Ouvre un terminal avec **Ctrl + Alt + T**. Copie chaque commande, colle-la dans le terminal avec **Ctrl + Maj + V**, puis **Entrée**. Quand le terminal demande ton mot de passe, tape-le : rien ne s'affiche pendant que tu tapes, c'est normal.
+
+### 3.1 Installer Docker
 
 ```bash
 curl -fsSL https://get.docker.com | sudo sh
@@ -112,14 +215,27 @@ curl -fsSL https://get.docker.com | sudo sh
 sudo usermod -aG docker $USER
 ```
 
-Déconnecte-toi puis reconnecte-toi (ou redémarre) pour pouvoir utiliser `docker` sans `sudo`. Vérifie :
+Déconnecte-toi puis reconnecte-toi (ou redémarre), puis vérifie :
 
 ```bash
 docker run --rm hello-world
 ```
 
-**Avec une carte NVIDIA**, le pilote doit déjà être installé (`nvidia-smi` doit afficher ta carte). Ajoute ensuite le lien
-entre Docker et la carte (NVIDIA Container Toolkit). Pour Ubuntu et Debian :
+✅ Tu dois voir **Hello from Docker!**
+
+### 3.2 Vérifier le pilote NVIDIA
+
+```bash
+nvidia-smi
+```
+
+✅ Tu dois voir un tableau avec le nom de ta carte et sa mémoire.
+
+⚠️ Si la commande n'existe pas : ouvre **Logiciels et mises à jour** → onglet **Pilotes additionnels**, choisis le pilote NVIDIA conseillé, applique, puis redémarre.
+
+### 3.3 Relier Docker à la carte (NVIDIA Container Toolkit)
+
+Quatre commandes, l'une après l'autre :
 
 ```bash
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
@@ -137,47 +253,19 @@ sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
 sudo nvidia-ctk runtime configure --runtime=docker && sudo systemctl restart docker
 ```
 
-Pour les autres distributions : https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
-
-Vérifie que Docker voit la carte :
+Puis vérifie que Docker voit la carte :
 
 ```bash
 docker run --rm --gpus all ubuntu nvidia-smi
 ```
 
-## 3. Lancer Skyval Calcul
+✅ Tu dois voir le même tableau qu'à l'étape 3.2, avec le nom de ta carte.
 
-Crée un dossier `skyval-calcul` où tu veux et ouvre un terminal dedans. Prends ensuite **uniquement** le bloc de ton
-système : les commandes Linux ne marchent pas dans PowerShell, et inversement.
+### 3.4 Lancer Skyval Calcul
 
-### Windows (PowerShell ou Invite de commandes)
-
-Dans l'Explorateur, ouvre le dossier `skyval-calcul`, tape `powershell` dans la barre d'adresse puis Entrée.
-Les commandes ci-dessous marchent aussi dans l'Invite de commandes (cmd), à condition d'être dans le dossier `skyval-calcul`.
-
-**Avec une carte NVIDIA** :
-
-```powershell
-curl.exe -fsSLO https://raw.githubusercontent.com/Thibaud165/skyval-calcul/main/docker-compose.yml
+```bash
+mkdir -p ~/skyval-calcul && cd ~/skyval-calcul
 ```
-
-```powershell
-docker compose up -d
-```
-
-**Sans carte NVIDIA** (l'interface marche, mais aucun modèle ne tient : le PC ne prendra pas de calculs) :
-
-```powershell
-curl.exe -fsSLO https://raw.githubusercontent.com/Thibaud165/skyval-calcul/main/docker-compose.cpu.yml
-```
-
-```powershell
-docker compose -f docker-compose.cpu.yml up -d
-```
-
-### Linux et macOS (Terminal)
-
-**Avec une carte NVIDIA (Linux)** :
 
 ```bash
 curl -fsSLO https://raw.githubusercontent.com/Thibaud165/skyval-calcul/main/docker-compose.yml
@@ -187,88 +275,139 @@ curl -fsSLO https://raw.githubusercontent.com/Thibaud165/skyval-calcul/main/dock
 docker compose up -d
 ```
 
-**Sans carte NVIDIA, ou sur Mac** (l'interface marche, mais aucun modèle ne tient : le PC ne prendra pas de calculs) :
+✅ Le premier lancement télécharge environ 4 Go. À la fin, tu dois voir **Container skyval-calcul Started**. Skyval Calcul se relancera tout seul à chaque démarrage du PC.
 
-```bash
-curl -fsSLO https://raw.githubusercontent.com/Thibaud165/skyval-calcul/main/docker-compose.cpu.yml
-```
+---
 
-```bash
-docker compose -f docker-compose.cpu.yml up -d
-```
+## 4. Régler Skyval Calcul
 
-Le premier lancement télécharge l'image depuis Docker Hub (environ 4 Go, une seule fois). Le conteneur redémarre ensuite tout seul avec Docker, donc avec
-ton PC si Docker démarre avec lui.
+### 4.1 Ouvrir la page de réglages
 
-## 4. Régler dans l'interface
+Ouvre ton navigateur (Chrome, Edge, Firefox…) et va sur :
 
-Ouvre http://localhost:8642 dans ton navigateur.
+http://localhost:8642
 
-1. **Connexion** : donne un nom à ta machine (ex. « PC de Léo » ou « PC fixe (Windows) ») et colle la clé reçue, puis clique sur *Enregistrer*.
-   « Connecté à Atlas ✓ » apparaît.
-2. **Utilisation du PC** : le curseur dit quelle part de ton PC Skyval peut prendre.
-   - À 100 %, aucune pause, et toute la mémoire de la carte graphique compte.
-   - À 50 %, le PC se repose autant de temps qu'il a calculé, et seule la moitié de la mémoire compte pour choisir le modèle.
-   Tu peux continuer à utiliser ton PC normalement.
-3. **Cette machine** : la page montre ta carte graphique, ta mémoire et le modèle conseillé selon le curseur (rien à lancer).
-4. **Installer** le modèle conseillé (8 ou 19 Go à télécharger), puis **Utiliser**. Le temps d'un vote se mesure tout seul,
-   sur les vrais calculs de Skyval.
-5. **Disponible pour Skyval** : coche. Avec « Disponible dès le démarrage du conteneur », ton PC se rend disponible tout seul à chaque démarrage.
+✅ Tu dois voir la page **Skyval Calcul**, avec **À configurer** en haut.
 
-Pendant un calcul, l'interface affiche « Calcul en cours » et les réglages sont bloqués, de quelques secondes à quelques
-minutes : le temps de trier un mail (un ou deux tours de votes par question, réglés par l'administrateur de Skyval).
+### 4.2 Relier ton PC à Skyval
 
-| Modèle | Téléchargement | Mémoire | Pour quelle carte |
-|---|---|---|---|
-| gemma3:12b | 8,1 Go | 9,5 Go | 12 Go et plus (RTX 3060 12 Go, 4060 Ti 16 Go, 4070, 4070 SUPER, 4080…) |
-| gemma4:26b | 18,7 Go | 20,5 Go | 24 Go (RTX 3090, 4090, 5090…) |
+Dans la zone **Connexion** :
 
-Le test conseille le plus gros modèle qui tient dans la mémoire autorisée par le curseur. Sans carte graphique, ou avec
-une carte de moins de 12 Go, aucun modèle n'est proposé : les modèles plus petits se trompent trop pour trier les mails.
+1. **Nom de cette machine** : écris un nom qui te ressemble, par exemple « PC de Léo ».
+2. **Clé de la machine** : colle la clé donnée par l'administrateur de Skyval.
+3. Clique sur **Enregistrer**.
 
-Les anciens modèles (gemma3:1b, gemma3:4b, gemma3:27b, ministral-3:8b, ministral-3:14b) ne sont plus utilisés par Skyval. S'ils sont encore installés,
-ils apparaissent sous « Anciens modèles » avec un bouton pour les supprimer du disque, et ce PC ne prend plus de calculs
-tant que l'un d'eux est le modèle utilisé : installe un modèle de la liste.
+✅ Après quelques secondes, tu dois voir **Connecté à Atlas ✓** à côté du bouton.
+
+⚠️ Tu vois **Atlas injoignable** ou **Pas connecté** ? Va à l'[étape 4.6](#46-si-atlas-reste-injoignable).
+
+### 4.3 Régler l'utilisation du PC
+
+Dans la zone **Utilisation du PC**, pousse le curseur à **100 %**.
+
+Pourquoi : le curseur dit quelle part de ton PC Skyval peut prendre. Plus bas (par exemple 50 %), le PC se repose entre deux calculs, mais Skyval n'a droit qu'à une partie de la mémoire de la carte. Sur une carte de 12 Go, il faut 100 %, sinon l'IA ne tient pas.
+
+✅ Tu dois voir **100 %** et « Aucune pause entre deux calculs ».
+
+### 4.4 Installer l'IA
+
+Dans la zone **Modèles d'IA** (un modèle, c'est l'IA elle-même) :
+
+1. Sur la ligne **gemma3:12b** (« 12b · validé par Skyval »), clique sur **Installer**. Il y a 8 Go à télécharger : une barre avance en pourcentage.
+2. Quand c'est fini, la ligne affiche **utilisé**. Si tu vois un bouton **Utiliser** à la place, clique dessus.
+
+✅ Tu dois voir l'étiquette **utilisé** sur la ligne gemma3:12b.
+
+Avec une carte de **24 Go** (RTX 3090, 4090, 5090…), la page peut aussi te conseiller **gemma4:26b** (19 Go à télécharger) : prends le modèle marqué **conseillé**.
+
+La vitesse de ton PC se mesure toute seule, sur les vrais calculs de Skyval : rien à lancer.
+
+### 4.5 Te rendre disponible
+
+Dans la zone **Disponibilité**, coche les deux interrupteurs :
+
+- **Disponible pour Skyval** : ton PC peut recevoir des calculs.
+- **Disponible dès le démarrage du conteneur** : ton PC se rend disponible tout seul à chaque allumage.
+
+✅ Tu dois voir **Disponible** en haut de la page, avec un voyant vert. C'est fini !
+
+Tu peux utiliser ton PC normalement. Pendant un calcul, la page affiche **Calcul en cours** et les réglages sont bloqués, de quelques secondes à quelques minutes. Pour ne plus recevoir de calculs un moment, décoche simplement **Disponible pour Skyval**.
+
+### 4.6 Si Atlas reste injoignable
+
+Atlas est le serveur de Skyval. Chez un invité Tailscale (c'est ton cas si l'administrateur t'a envoyé un lien de partage), Atlas peut avoir **une autre adresse** que celle prévue. Voici comment la trouver.
+
+1. Vérifie d'abord que Tailscale est connecté et que tu as bien accepté le partage ([étape 1.2](#12-installer-tailscale)).
+2. Ouvre PowerShell (Windows) ou un terminal (Ubuntu) et tape :
+
+   Windows :
+
+   ```powershell
+   & "C:\Program Files\Tailscale\tailscale.exe" status
+   ```
+
+   Ubuntu :
+
+   ```bash
+   tailscale status
+   ```
+
+3. Cherche la ligne qui contient **rpi-atlas**. Le début de la ligne est son adresse, par exemple `100.95.29.37`.
+4. Retourne sur http://localhost:8642. Dans **Connexion**, clique sur **Avancé**.
+5. Dans **Adresse d'Atlas**, écris `http://` + l'adresse + `:4601`. Par exemple : `http://100.95.29.37:4601`
+6. Clique sur **Enregistrer**.
+
+✅ Tu dois voir **Connecté à Atlas ✓**.
+
+---
 
 ## 5. Au quotidien
 
-| | Commande (dans le dossier `skyval-calcul`) |
+Normalement, **rien à faire** : Skyval Calcul se lance tout seul avec ton PC.
+
+Pour le reste, ouvre un terminal **dans le dossier `skyval-calcul`** ([étape 2.10](#210-ouvrir-un-terminal-dans-ce-dossier) sur Windows, `cd ~/skyval-calcul` sur Ubuntu), puis :
+
+| Pour… | Tape |
 |---|---|
 | Mettre à jour | `docker compose pull` puis `docker compose up -d` |
 | Arrêter | `docker compose down` |
 | Relancer | `docker compose up -d` |
-| Voir ce qu'il fait | `docker logs -f skyval-calcul` |
-| Tout supprimer (modèles compris) | `docker compose down -v` |
+| Désinstaller (IA comprise) | `docker compose down -v`, puis supprime le dossier `skyval-calcul` |
 
-Avec `docker-compose.cpu.yml`, ajoute `-f docker-compose.cpu.yml` après `docker compose`.
+**Deux systèmes sur le même PC (Windows et Ubuntu)** : installe Skyval Calcul sur chacun, avec un nom et une clé différents (par exemple « PC fixe (Windows) » et « PC fixe (Ubuntu) »).
 
-**Plusieurs systèmes sur le même PC (double démarrage Linux + Windows)** : installe Skyval Calcul sur chacun, avec un nom
-et une clé différents (ex. « PC fixe (Linux) » et « PC fixe (Windows) »). Chaque système garde ses propres modèles.
+---
 
 ## 6. Ça ne marche pas
 
 | Ce que tu vois | Quoi faire |
 |---|---|
-| Windows : « failed to connect to the docker API at npipe:… dockerDesktopLinuxEngine » (souvent avec « unable to get image ») | Docker Desktop n'est pas démarré : ouvre-le, attends « Engine running », puis relance `docker compose up -d`. S'il ne démarre pas : étapes 2a et 2b (virtualisation, WSL). |
-| « Atlas injoignable » | Tailscale est-il connecté, et le partage d'Atlas accepté ? Puis regarde l'adresse d'Atlas **chez toi** : `tailscale status` (Windows : `& "C:\Program Files\Tailscale\tailscale.exe" status`), ligne `rpi-atlas`. Une machine partagée peut avoir une autre adresse dans ton réseau (par exemple `100.95.29.37` au lieu de `100.95.29.38`) : mets-la dans **Avancé → Adresse d'Atlas**, sous la forme `http://<adresse>:4601`, puis *Enregistrer*. |
-| « Clé refusée » | La clé est mal collée, ou elle a été supprimée : demande-en une nouvelle à l'administrateur. |
-| Windows : Docker Desktop affiche « WSL 2 installation is incomplete » ou ne démarre pas | Relance `wsl --update` dans PowerShell (administrateur), redémarre, et vérifie que la virtualisation est activée (étape 2a). |
-| Windows : « Impossible de trouver un paramètre correspondant au nom « fsSLO » » | Dans PowerShell, `curl` seul n'est pas le vrai curl : écris `curl.exe` (bloc Windows de l'étape 3). |
-| Windows : « 'Invoke-WebRequest' n'est pas reconnu » | Tu es dans l'Invite de commandes (cmd) : utilise `curl.exe` (étape 3), qui marche partout. |
-| « unexpected EOF » pendant le téléchargement | La connexion a été coupée : relance la même commande, ce qui est déjà téléchargé est gardé. |
-| Windows : `wsl --install` affiche l'aide au lieu d'installer | WSL est déjà là : fais `wsl --update` puis `wsl --set-default-version 2`. |
-| Le test dit « Aucune » carte graphique | Windows : pilote NVIDIA à jour et Docker Desktop en mode WSL 2. Linux : refais l'installation de `nvidia-container-toolkit`. Puis `docker compose down` et `docker compose up -d`. |
-| `docker compose up` dit « could not select device driver nvidia » | Docker ne voit pas de carte NVIDIA : vérifie avec `docker run --rm --gpus all ubuntu nvidia-smi`, sinon utilise `docker-compose.cpu.yml`. |
-| Linux : « permission denied » sur `docker` | Tu ne t'es pas reconnecté après `usermod`, ou ajoute `sudo` devant la commande. |
-| Windows : « VmmemWSL » prend beaucoup de mémoire | C'est le cache de WSL : voir l'étape 2e (fichier `.wslconfig`), puis `wsl --shutdown`. |
-| Un vote prend plus de 20 s | Prends un modèle plus petit, ou monte le curseur. |
-| « Carte trop faible » | Aucun modèle ne tient dans la carte graphique de ce PC (ou Docker ne la voit pas : voir « Aucune » carte graphique ci-dessus). |
-| « Modèle retiré » | Le modèle utilisé n'est plus dans la liste de Skyval : installe un modèle de la liste, puis supprime l'ancien. |
-| http://localhost:8642 ne s'ouvre pas | `docker ps` doit afficher `skyval-calcul`. Sinon, `docker logs skyval-calcul` donne l'erreur. |
+| « docker n'est pas reconnu… » | Docker Desktop n'est pas installé, ou la fenêtre était ouverte avant : ferme PowerShell, rouvre-le et réessaie. Sinon, refais l'[étape 2.5](#25-installer-docker-desktop). |
+| « failed to connect to the docker API at npipe:… dockerDesktopLinuxEngine » (souvent avec « unable to get image ») | Docker Desktop n'est pas ouvert. Ouvre-le, attends **Engine running**, puis relance `docker compose up -d`. S'il ne démarre pas : étapes [2.1](#21-vérifier-la-virtualisation) et [2.2](#22-installer-wsl). |
+| Docker Desktop affiche « WSL 2 installation is incomplete », ou ne démarre pas | Dans PowerShell **administrateur**, tape `wsl --update`, redémarre le PC, et vérifie la virtualisation ([étape 2.1](#21-vérifier-la-virtualisation)). |
+| `wsl --install` affiche une aide au lieu d'installer | WSL est déjà là. Tape `wsl --update`, puis `wsl --set-default-version 2`. |
+| « Impossible de trouver un paramètre correspondant au nom « fsSLO » » | Tu as tapé `curl` au lieu de `curl.exe`. Copie la commande de l'[étape 2.11](#211-télécharger-skyval-calcul) telle quelle. |
+| « 'Invoke-WebRequest' n'est pas reconnu » | Tu es dans l'Invite de commandes (cmd) : utilise la commande avec `curl.exe` de l'[étape 2.11](#211-télécharger-skyval-calcul), elle marche aussi là. |
+| « unexpected EOF » pendant un téléchargement | La connexion a été coupée. Relance la même commande : ce qui est déjà téléchargé est gardé. |
+| « could not select device driver nvidia » | Docker ne voit pas ta carte NVIDIA. Windows : pilote à jour ([étape 2.4](#24-mettre-à-jour-le-pilote-nvidia)) et Docker Desktop installé avec WSL 2. Ubuntu : refais l'[étape 3.3](#33-relier-docker-à-la-carte-nvidia-container-toolkit). Sans carte NVIDIA, Skyval Calcul ne peut pas marcher sur ce PC. |
+| Ubuntu : « permission denied » avec `docker` | Tu ne t'es pas déconnecté puis reconnecté après l'[étape 3.1](#31-installer-docker). Fais-le, ou ajoute `sudo` devant la commande. |
+| http://localhost:8642 ne s'ouvre pas | Docker Desktop est-il ouvert (**Engine running**) ? Puis, dans le dossier `skyval-calcul`, tape `docker compose up -d`. Si ça ne suffit pas, `docker logs skyval-calcul` montre l'erreur : envoie-la à l'administrateur de Skyval. |
+| **Atlas injoignable** | Suis l'[étape 4.6](#46-si-atlas-reste-injoignable). |
+| **Clé refusée** | La clé est mal collée, ou elle a été supprimée. Recolle-la, ou demande-en une nouvelle à l'administrateur de Skyval. |
+| Dans la zone **Cette machine**, la carte graphique est « Aucune » | Docker ne voit pas ta carte. Windows : pilote NVIDIA à jour et Docker Desktop en mode WSL 2. Ubuntu : refais l'[étape 3.3](#33-relier-docker-à-la-carte-nvidia-container-toolkit). Puis `docker compose down` et `docker compose up -d`. |
+| **Carte trop faible** | Ta carte graphique a moins de 12 Go (ou Docker ne la voit pas : voir la ligne au-dessus). Ce PC ne peut pas recevoir de calculs. |
+| « Aucun modèle ne tient dans la mémoire autorisée : monte le curseur » | Pousse le curseur **Utilisation du PC** à 100 % ([étape 4.3](#43-régler-lutilisation-du-pc)). |
+| **Modèle retiré**, ou une zone **Anciens modèles** | Ce modèle n'est plus utilisé par Skyval. Installe gemma3:12b ([étape 4.4](#44-installer-lia)), puis supprime l'ancien avec sa poubelle. |
+| Un calcul dure plus de 20 secondes par vote | Mets le curseur à 100 %. Si tu utilises gemma4:26b, reviens à gemma3:12b. |
+| Windows : « VmmemWSL » prend beaucoup de mémoire dans le Gestionnaire des tâches | Refais l'[étape 2.3](#23-limiter-la-mémoire-de-wsl), puis rouvre Docker Desktop. |
+
+Toujours bloqué ? Envoie une capture d'écran à l'administrateur de Skyval.
 
 ---
 
 ## 7. Pour l'administrateur de Skyval
+
+*Cette partie n'est pas pour les utilisateurs.*
 
 - **Une clé par machine** : immeuble → hall → *Réseau de calcul* → *+ Machine*. La clé ne s'affiche qu'une fois.
   Supprimer la machine coupe sa clé.
