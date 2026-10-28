@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import os from "node:os";
 import { spawn, execFile } from "node:child_process";
 
-const VERSION = "1.2.0";
+const VERSION = "1.2.1";
 const DATA = process.env.DATA || "/data";
 const CONFIG = `${DATA}/config.json`;
 const OLLAMA = process.env.OLLAMA_URL || "http://127.0.0.1:11434";      // OLLAMA_URL : un Ollama déjà lancé ailleurs (tests)
@@ -45,8 +45,8 @@ function lancerOllama() {
   const p = spawn("ollama", ["serve"], { env: { ...process.env, OLLAMA_HOST: "127.0.0.1:11434", OLLAMA_MODELS: `${DATA}/modeles`, OLLAMA_NUM_PARALLEL: "1", OLLAMA_MAX_LOADED_MODELS: "1" }, stdio: "ignore" });
   p.on("exit", (code) => { console.log(`Ollama arrêté (${code}), relance dans 5 s`); setTimeout(lancerOllama, 5000); });
 }
-async function ollama(chemin, corps, ms = 300000) {
-  const r = await fetch(`${OLLAMA}${chemin}`, { method: corps ? "POST" : "GET", body: corps ? JSON.stringify(corps) : undefined, signal: AbortSignal.timeout(ms) });
+async function ollama(chemin, corps, ms = 300000, methode = corps ? "POST" : "GET") {
+  const r = await fetch(`${OLLAMA}${chemin}`, { method: methode, body: corps ? JSON.stringify(corps) : undefined, signal: AbortSignal.timeout(ms) });
   const d = await r.json().catch(() => ({}));
   if (!r.ok || d.error) throw new Error(d.error || `Ollama HTTP ${r.status}`);
   return d;
@@ -231,7 +231,7 @@ http.createServer(async (req, res) => {
       const m = catalogue(c.nom);
       if (!m) {                                                            // ancien modèle : on peut seulement le supprimer du disque
         if (c.action !== "supprimer" || typeof c.nom !== "string" || !(await lireModeles()).includes(c.nom)) return json(res, 400, { erreur: "Modèle inconnu" });
-        await ollama("/api/delete", { model: c.nom, name: c.nom });
+        await ollama("/api/delete", { model: c.nom, name: c.nom }, 30000, "DELETE");   // Ollama : DELETE, pas POST (sinon 405)
         if (config.modele === c.nom) { config.modele = ""; await sauver(); }
         await lireModeles(); reannoncer(); return json(res, 200, etat());
       }
@@ -241,7 +241,7 @@ http.createServer(async (req, res) => {
         if (!tient(m)) return json(res, 400, { erreur: `${m.nom} ne tient pas dans ta carte graphique : il tournerait sur le processeur, très lentement.` });
         config.modele = m.nom; await sauver();
       }
-      else if (c.action === "supprimer") { await ollama("/api/delete", { model: m.nom, name: m.nom }).catch(() => {}); if (config.modele === m.nom) config.modele = ""; await sauver(); await lireModeles(); }
+      else if (c.action === "supprimer") { await ollama("/api/delete", { model: m.nom, name: m.nom }, 30000, "DELETE"); if (config.modele === m.nom) config.modele = ""; await sauver(); await lireModeles(); }
       reannoncer(); return json(res, 200, etat());
     }
     json(res, 404, { erreur: "Introuvable" });
