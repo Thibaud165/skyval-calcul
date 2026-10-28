@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import os from "node:os";
 import { spawn, execFile } from "node:child_process";
 
-const VERSION = "1.4.1";
+const VERSION = "1.4.2";
 const DATA = process.env.DATA || "/data";
 const CONFIG = `${DATA}/config.json`;
 const OLLAMA = process.env.OLLAMA_URL || "http://127.0.0.1:11434";      // OLLAMA_URL : un Ollama déjà lancé ailleurs (tests)
@@ -50,7 +50,7 @@ let materiel = null;
 
 // ---------- Ollama (dans le même conteneur, jamais exposé dehors) ----------
 function lancerOllama() {
-  const p = spawn("ollama", ["serve"], { env: { ...process.env, OLLAMA_HOST: "127.0.0.1:11434", OLLAMA_MODELS: `${DATA}/modeles`, OLLAMA_NUM_PARALLEL: "1", OLLAMA_MAX_LOADED_MODELS: "1" }, stdio: "ignore" });
+  const p = spawn("ollama", ["serve"], { env: { ...process.env, OLLAMA_HOST: "127.0.0.1:11434", OLLAMA_MODELS: `${DATA}/modeles`, OLLAMA_NUM_PARALLEL: "1", OLLAMA_MAX_LOADED_MODELS: "1" }, stdio: ["ignore", "inherit", "inherit"] });   // messages d'Ollama dans les journaux du conteneur (carte graphique vue ou non)
   p.on("exit", (code) => { console.log(`Ollama arrêté (${code}), relance dans 5 s`); setTimeout(lancerOllama, 5000); });
 }
 async function ollama(chemin, corps, ms = 300000, methode = corps ? "POST" : "GET") {
