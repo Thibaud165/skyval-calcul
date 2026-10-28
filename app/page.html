@@ -146,6 +146,7 @@
 
   /* Modèles */
   .liste-modeles{list-style:none;margin:.65rem 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+  #modeles{margin-top:0}
   .modele{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:4px 14px;padding:.5rem .8rem}
   .modele.utilise{box-shadow:inset 4px 0 0 var(--vertv)}
   .poids{display:grid;grid-template-columns:repeat(2,8px);gap:3px}
@@ -190,6 +191,22 @@
     .grille{flex:1;min-height:0;padding-right:16px}
     .col{overflow-y:auto;overflow-x:hidden;padding:0 6px 6px 0;scrollbar-width:thin;scrollbar-color:#36445F transparent}
     .machine{flex:1 1 0 !important;min-height:300px}
+    /* La place qui reste en bas d'une colonne est donnée au contenu, pas laissée vide */
+    .col > .carte:last-child{display:flex;flex-direction:column}
+    #bench-res{flex:1;display:flex;flex-direction:column;min-height:0}
+    #bench-res .tuiles{flex:1;grid-auto-rows:minmax(min-content,1fr);gap:12px}
+    #bench-res .tuile{justify-content:center;gap:5px;padding:.6rem .9rem}
+    #bench-res .tuiles b{font-size:clamp(1.02rem,.3rem + 1.6vh,1.7rem)}
+    #bench-res .tuiles span{font-size:.86rem}
+    .usage-corps{flex:1;display:flex;flex-direction:column;justify-content:center;gap:clamp(.4rem,2.2vh,1.6rem)}
+    .usage-corps input[type=range],.usage-corps .graduations{margin:0}
+    .usage-corps .graduations{margin-top:-.4rem}
+    #usageVal{font-size:clamp(2.3rem,1.2rem + 2.2vh,3.4rem)}
+    .cases{height:clamp(14px,3.2vh,34px)}
+  }
+  /* PC assez haut : les 6 tuiles de « Cette machine » en 2 colonnes, plus lisibles */
+  @media (min-width:1180px) and (min-height:860px){
+    #bench-res .tuiles.t3{grid-template-columns:repeat(2,minmax(0,1fr))}
   }
   /* Fenêtre moyenne : 2 colonnes, la page défile */
   @media (max-width:1179px){
@@ -245,7 +262,6 @@
   <div class="col col-modeles">
     <section class="carte" aria-labelledby="t-modeles">
       <h2 id="t-modeles">Modèles d'IA</h2>
-      <p class="aide">Il fait les calculs de Skyval sur ce PC. Plus il est gros, plus il est fiable et lourd.</p>
       <ul id="modeles" class="liste-modeles"></ul>
       <div id="anciens" hidden>
         <p class="sous-titre">Anciens modèles</p>
@@ -280,13 +296,15 @@
     </section>
     <section class="carte" aria-labelledby="t-usage">
       <h2 id="t-usage">Utilisation du PC</h2>
-      <div class="usage-tete">
-        <output id="usageVal" for="usage">75 %</output>
-        <div class="rythme" aria-hidden="true"><div class="cases" id="cases"></div><div class="legende"><span>calcul</span><span>repos</span></div></div>
+      <div class="usage-corps">
+        <div class="usage-tete">
+          <output id="usageVal" for="usage">75 %</output>
+          <div class="rythme" aria-hidden="true"><div class="cases" id="cases"></div><div class="legende"><span>calcul</span><span>repos</span></div></div>
+        </div>
+        <input type="range" id="usage" min="10" max="100" step="5" aria-label="Utilisation du PC, en pourcentage" aria-describedby="usageAide">
+        <div class="graduations" aria-hidden="true"><span>10 %</span><span>50 %</span><span>100 %</span></div>
+        <p class="aide" id="usageAide"></p>
       </div>
-      <input type="range" id="usage" min="10" max="100" step="5" aria-label="Utilisation du PC, en pourcentage" aria-describedby="usageAide">
-      <div class="graduations" aria-hidden="true"><span>10 %</span><span>50 %</span><span>100 %</span></div>
-      <p class="aide" id="usageAide"></p>
     </section>
   </div>
 </main>
