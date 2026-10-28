@@ -303,7 +303,7 @@ Dans la zone **Connexion** :
 
 ### 4.3 Régler l'utilisation du PC
 
-Dans la zone **Utilisation du PC**, pousse le curseur à **100 %**.
+Dans la zone **Utilisation du PC**, vérifie que le curseur est à **100 %** (c'est le réglage de départ ; s'il est plus bas, pousse-le à fond à droite).
 
 Pourquoi : le curseur dit quelle part de ton PC Skyval peut prendre. Plus bas (par exemple 50 %), le PC se repose entre deux calculs, mais Skyval n'a droit qu'à une partie de la mémoire de la carte. Sur une carte de 12 Go, il faut 100 %, sinon l'IA ne tient pas.
 
