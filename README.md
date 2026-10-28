@@ -1,16 +1,5 @@
 # Skyval Calcul
 
-Prête la puissance de ton PC (de préférence sa carte graphique) à **Skyval** pour trier les réponses à ses mails avec une
-petite IA (Ollama) qui tourne chez toi. Quand ton PC est allumé et « disponible », le serveur de Skyval (Atlas) lui
-envoie des calculs. Quand il est éteint ou « indisponible », rien ne se passe : Skyval attend un autre PC.
-
-- **Un seul conteneur Docker**, le même sous Linux, Windows et macOS.
-- **Aucun port à ouvrir** : c'est ton PC qui va chercher les calculs chez Atlas, par Tailscale. Atlas ne peut rien faire sur ton PC.
-- **Une interface web** sur ton PC, http://localhost:8642, pour dire si ton PC est disponible, quelle part de ton PC Skyval peut prendre et quel modèle utiliser.
-- **Ce que ton PC reçoit** : le texte des réponses de commerçants aux mails de Skyval, le temps d'un calcul. Rien n'est gardé ni écrit sur le disque.
-
----
-
 ## Sommaire
 
 1. [Ce qu'il te faut](#1-ce-quil-te-faut)
@@ -23,9 +12,9 @@ envoie des calculs. Quand il est éteint ou « indisponible », rien ne se passe
 
 ---
 
-## 1. Ce qu'il te faut
+## 1. Ce qu'il faut
 
-| | |
+| **Outils** | Informations |
 |---|---|
 | **Tailscale** | installé et connecté (https://tailscale.com/download), avec le partage d'Atlas accepté : l'administrateur de Skyval t'envoie le lien |
 | **Une clé** | une par machine, donnée par l'administrateur de Skyval |
@@ -142,11 +131,6 @@ Vérifie que Docker voit la carte :
 ```bash
 docker run --rm --gpus all ubuntu nvidia-smi
 ```
-
-### macOS
-
-Installe Docker Desktop (https://www.docker.com/products/docker-desktop/). Sur Mac, Docker n'a pas accès à la puce
-graphique : le calcul se fait sur le processeur. Utilise `docker-compose.cpu.yml` à l'étape 3 et un petit modèle.
 
 ## 3. Lancer Skyval Calcul
 
