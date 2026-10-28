@@ -66,6 +66,8 @@
   h2 .droite{margin-left:auto;text-transform:none;letter-spacing:.04em}
   @keyframes voyantPlaque{50%{background:#FFD08A}}
   .aide{font-size:.86rem;color:var(--texte2)}
+  .aide:empty{display:none}
+  .aide:empty + .inter{margin-top:.75rem}                                  /* phrase vide entre 2 interrupteurs : on garde l'écart */
   .ok{color:var(--vertv)} .ko{color:var(--rouge)}
 
   /* Boutons : des touches qui s'enfoncent */
@@ -146,7 +148,6 @@
 
   /* Modèles */
   .liste-modeles{list-style:none;margin:.65rem 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
-  #modeles{margin-top:0}
   .modele{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:4px 14px;padding:.5rem .8rem}
   .modele.utilise{box-shadow:inset 4px 0 0 var(--vertv)}
   .poids{display:grid;grid-template-columns:repeat(2,8px);gap:3px}
@@ -179,7 +180,6 @@
   #bench-res .tuiles b{font-size:1.02rem}
   .conseil{margin-top:.75rem;padding:.55rem .75rem;font-size:.88rem;background:#3E2E12;color:#FFE4B8;box-shadow:0 0 0 2px #8A5A14}
   .conseil.ko{background:#4A1F1F;color:#FFD3CB;box-shadow:0 0 0 2px #8A2E22}
-  #benchAide{margin:-.35rem 0 .75rem}
 
   /* Message d'erreur */
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10;max-width:min(560px,calc(100% - 32px));padding:.7rem 1rem;background:#4A1F1F;color:#FFE0DA;font:500 .92rem var(--plex);box-shadow:0 0 0 3px var(--nuit),6px 6px 0 3px rgba(8,14,28,.45)}
@@ -191,22 +191,6 @@
     .grille{flex:1;min-height:0;padding-right:16px}
     .col{overflow-y:auto;overflow-x:hidden;padding:0 6px 6px 0;scrollbar-width:thin;scrollbar-color:#36445F transparent}
     .machine{flex:1 1 0 !important;min-height:300px}
-    /* La place qui reste en bas d'une colonne est donnée au contenu, pas laissée vide */
-    .col > .carte:last-child{display:flex;flex-direction:column}
-    #bench-res{flex:1;display:flex;flex-direction:column;min-height:0}
-    #bench-res .tuiles{flex:1;grid-auto-rows:minmax(min-content,1fr);gap:12px}
-    #bench-res .tuile{justify-content:center;gap:5px;padding:.6rem .9rem}
-    #bench-res .tuiles b{font-size:clamp(1.02rem,.3rem + 1.6vh,1.7rem)}
-    #bench-res .tuiles span{font-size:.86rem}
-    .usage-corps{flex:1;display:flex;flex-direction:column;justify-content:center;gap:clamp(.4rem,2.2vh,1.6rem)}
-    .usage-corps input[type=range],.usage-corps .graduations{margin:0}
-    .usage-corps .graduations{margin-top:-.4rem}
-    #usageVal{font-size:clamp(2.3rem,1.2rem + 2.2vh,3.4rem)}
-    .cases{height:clamp(14px,3.2vh,34px)}
-  }
-  /* PC assez haut : les 6 tuiles de « Cette machine » en 2 colonnes, plus lisibles */
-  @media (min-width:1180px) and (min-height:860px){
-    #bench-res .tuiles.t3{grid-template-columns:repeat(2,minmax(0,1fr))}
   }
   /* Fenêtre moyenne : 2 colonnes, la page défile */
   @media (max-width:1179px){
@@ -270,7 +254,6 @@
     </section>
     <section class="carte" aria-labelledby="t-test">
       <h2 id="t-test">Cette machine</h2>
-      <p class="aide" id="benchAide">Ce que Skyval voit de ce PC et le modèle conseillé selon le curseur. La vitesse se mesure toute seule, sur les vrais calculs.</p>
       <div id="bench-res" aria-live="polite"></div>
     </section>
   </div>
@@ -296,15 +279,13 @@
     </section>
     <section class="carte" aria-labelledby="t-usage">
       <h2 id="t-usage">Utilisation du PC</h2>
-      <div class="usage-corps">
-        <div class="usage-tete">
-          <output id="usageVal" for="usage">75 %</output>
-          <div class="rythme" aria-hidden="true"><div class="cases" id="cases"></div><div class="legende"><span>calcul</span><span>repos</span></div></div>
-        </div>
-        <input type="range" id="usage" min="10" max="100" step="5" aria-label="Utilisation du PC, en pourcentage" aria-describedby="usageAide">
-        <div class="graduations" aria-hidden="true"><span>10 %</span><span>50 %</span><span>100 %</span></div>
-        <p class="aide" id="usageAide"></p>
+      <div class="usage-tete">
+        <output id="usageVal" for="usage">75 %</output>
+        <div class="rythme" aria-hidden="true"><div class="cases" id="cases"></div><div class="legende"><span>calcul</span><span>repos</span></div></div>
       </div>
+      <input type="range" id="usage" min="10" max="100" step="5" aria-label="Utilisation du PC, en pourcentage" aria-describedby="usageAide">
+      <div class="graduations" aria-hidden="true"><span>10 %</span><span>50 %</span><span>100 %</span></div>
+      <p class="aide" id="usageAide"></p>
     </section>
   </div>
 </main>
@@ -372,7 +353,7 @@ function rendre() {
   // Disponibilité
   $("actif").checked = e.actif; $("actif").disabled = bloque;
   $("demarrage").checked = c.demarrage; $("demarrage").disabled = bloque;
-  $("aideActif").textContent = !e.actif ? "Skyval n'enverra rien à ce PC." : e.pret ? "Skyval peut envoyer des calculs à ce PC."
+  $("aideActif").textContent = !e.actif || e.pret ? ""
     : carteTropFaible(e) ? "Ce PC n'a pas de carte graphique assez puissante pour Skyval." : e.anciens.includes(c.modele) ? "Utilise un modèle de la liste pour recevoir des calculs." : "Installe un modèle d'IA de la liste pour recevoir des calculs.";
   // Utilisation
   if (document.activeElement !== $("usage")) $("usage").value = c.usage;
