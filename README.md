@@ -250,7 +250,7 @@ et une clé différents (ex. « PC fixe (Linux) » et « PC fixe (Windows) »). 
 | Ce que tu vois | Quoi faire |
 |---|---|
 | Windows : « failed to connect to the docker API at npipe:… dockerDesktopLinuxEngine » (souvent avec « unable to get image ») | Docker Desktop n'est pas démarré : ouvre-le, attends « Engine running », puis relance `docker compose up -d`. S'il ne démarre pas : étapes 2a et 2b (virtualisation, WSL). |
-| « Atlas injoignable » | Tailscale est-il connecté ? Le partage d'Atlas est-il accepté ? Teste `ping 100.95.29.38`. |
+| « Atlas injoignable » | Tailscale est-il connecté, et le partage d'Atlas accepté ? Puis regarde l'adresse d'Atlas **chez toi** : `tailscale status` (Windows : `& "C:\Program Files\Tailscale\tailscale.exe" status`), ligne `rpi-atlas`. Une machine partagée peut avoir une autre adresse dans ton réseau (par exemple `100.95.29.37` au lieu de `100.95.29.38`) : mets-la dans **Avancé → Adresse d'Atlas**, sous la forme `http://<adresse>:4601`, puis *Enregistrer*. |
 | « Clé refusée » | La clé est mal collée, ou elle a été supprimée : demande-en une nouvelle à l'administrateur. |
 | Windows : Docker Desktop affiche « WSL 2 installation is incomplete » ou ne démarre pas | Relance `wsl --update` dans PowerShell (administrateur), redémarre, et vérifie que la virtualisation est activée (étape 2a). |
 | Windows : « Impossible de trouver un paramètre correspondant au nom « fsSLO » » | Dans PowerShell, `curl` seul n'est pas le vrai curl : écris `curl.exe` (bloc Windows de l'étape 3). |
