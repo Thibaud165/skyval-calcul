@@ -52,11 +52,13 @@ async function lireModeles() {
   try { installes = (await ollama("/api/tags", null, 5000)).models.map((m) => m.name); } catch {}
   return installes;
 }
-const pret = () => Boolean(config.modele && installes.includes(config.modele));
+// Un modèle plus gros que la carte graphique tournerait surtout sur le processeur : très lent, PC à fond. Sans carte : 4b au plus
+const tient = (m, mat = materiel) => !mat || (mat.gpu ? m.memoire <= mat.gpu.vram : m.taille < 4);
+const pret = () => Boolean(config.modele && installes.includes(config.modele) && tient(MODELES.find((m) => m.nom === config.modele) || { memoire: 0, taille: 0 }));
 const threads = () => Math.max(1, Math.round(os.cpus().length * config.usage / 100));
 
-async function generer(prompt, options = {}) {
-  const d = await ollama("/api/generate", { model: config.modele, prompt, stream: false, keep_alive: "30s", options: { ...options, num_ctx: NUM_CTX, num_thread: threads() } });   // modèle déchargé 30 s après le dernier calcul : la carte graphique se libère vite
+async function generer(prompt, options = {}, ms = 300000) {
+  const d = await ollama("/api/generate", { model: config.modele, prompt, stream: false, keep_alive: "30s", options: { ...options, num_ctx: NUM_CTX, num_thread: threads() } }, ms);   // modèle déchargé 30 s après le dernier calcul : la carte graphique se libère vite
   return d.response;
 }
 
@@ -91,10 +93,15 @@ async function bencher() {
     materiel = await detecter();
     let secondes = null;
     if (pret()) {
-      await generer(VOTE_TEST, { num_predict: 4 });                        // chargement du modèle, pas compté
-      const debut = Date.now();
-      for (let i = 0; i < 3; i++) await generer(VOTE_TEST, { temperature: 0.7, num_predict: 8 });
-      secondes = Math.round((Date.now() - debut) / 300) / 10;
+      try {
+        await generer(VOTE_TEST, { num_predict: 4 }, 120000);               // chargement du modèle (2 min max), pas compté
+        const debut = Date.now();
+        for (let i = 0; i < 3; i++) await generer(VOTE_TEST, { temperature: 0.7, num_predict: 8 }, 60000);
+        secondes = Math.round((Date.now() - debut) / 300) / 10;
+      } catch (e) {
+        await ollama("/api/generate", { model: config.modele, keep_alive: 0 }, 10000).catch(() => {});   // on libère la mémoire
+        throw new Error(e.name === "TimeoutError" ? `${config.modele} est trop lent sur cette machine : prends un modèle plus petit.` : e.message);
+      }
     }
     config.bench = { le: new Date().toISOString(), ...materiel, usage: config.usage, budget: budget(materiel), conseille: conseiller(materiel), modele: pret() ? config.modele : null, secondes };
     await sauver();
@@ -178,7 +185,7 @@ const json = (res, code, d) => { res.writeHead(code, { "Content-Type": "applicat
 const lireCorps = (req) => new Promise((ok) => { let s = ""; req.on("data", (c) => { s += c; }); req.on("end", () => { try { ok(JSON.parse(s || "{}")); } catch { ok({}); } }); });
 function etat() {
   return { version: VERSION, config: { ...config, cle: config.cle ? `${config.cle.slice(0, 6)}…` : "" }, actif, atlas, reserve: Boolean(reserve), enCalcul, benchEnCours, stats, materiel, installes, telechargements,
-    modeles: MODELES.map((m) => ({ ...m, installe: installes.includes(m.nom), possible: materiel ? m.memoire <= budget(materiel) : null })) };
+    modeles: MODELES.map((m) => ({ ...m, installe: installes.includes(m.nom), possible: materiel ? m.memoire <= budget(materiel) : null, tient: tient(m) })) };
 }
 http.createServer(async (req, res) => {
   try {
@@ -210,7 +217,11 @@ http.createServer(async (req, res) => {
       const m = MODELES.find((x) => x.nom === c.nom);
       if (!m) return json(res, 400, { erreur: "Modèle inconnu" });
       if (c.action === "installer") installer(m.nom);
-      else if (c.action === "utiliser") { if (!installes.includes(m.nom)) return json(res, 400, { erreur: "Installe-le d'abord" }); config.modele = m.nom; await sauver(); }
+      else if (c.action === "utiliser") {
+        if (!installes.includes(m.nom)) return json(res, 400, { erreur: "Installe-le d'abord" });
+        if (!tient(m)) return json(res, 400, { erreur: `${m.nom} ne tient pas dans ta carte graphique : il tournerait sur le processeur, très lentement.` });
+        config.modele = m.nom; await sauver();
+      }
       else if (c.action === "supprimer") { await ollama("/api/delete", { model: m.nom, name: m.nom }).catch(() => {}); if (config.modele === m.nom) config.modele = ""; await sauver(); await lireModeles(); }
       reannoncer(); return json(res, 200, etat());
     }

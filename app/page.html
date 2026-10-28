@@ -395,7 +395,8 @@ function rendreModeles(b, c) {
     const tags = [];
     if (utilise) tags.push(["actuel", "utilisé"]);
     if (b?.conseille === m.nom) tags.push(["conseille", "conseillé"]);
-    if (m.possible === false) tags.push(["gros", "trop gros"]);
+    if (m.tient === false) tags.push(["gros", "ne tient pas"]);
+    else if (m.possible === false) tags.push(["gros", "trop gros"]);
     for (const [k, l] of tags) nom.append(el("span", `tag ${k}`, l));
     const detail = el("div", "detail"); detail.append(el("code", null, m.nom), ` · ${fr(m.taille)} Go à télécharger · ${fr(m.memoire)} Go de mémoire`);
     info.append(nom, detail);
@@ -411,10 +412,11 @@ function rendreModeles(b, c) {
       p.append(barre); if (dl.total) p.append(el("div", "detail", `${go(dl.fait)} / ${go(dl.total)} téléchargés`));
       li.append(p);
     } else if (m.installe) {
-      if (c.modele !== m.nom) actions.append(bouton("Utiliser", `utiliser-${m.nom}`, () => api("/api/modele", { nom: m.nom, action: "utiliser" }), { cls: "plein" }));
+      if (c.modele !== m.nom && m.tient !== false) actions.append(bouton("Utiliser", `utiliser-${m.nom}`, () => api("/api/modele", { nom: m.nom, action: "utiliser" }), { cls: "plein" }));
+      if (m.tient === false) li.append(el("div", "erreur", "Ne tient pas dans ta carte graphique : il tournerait sur le processeur, très lentement. Supprime-le pour libérer le disque."));
       actions.append(bouton("", `supprimer-${m.nom}`, () => confirm(`Supprimer ${m.nom} du disque ?`) && api("/api/modele", { nom: m.nom, action: "supprimer" }), { cls: "icone danger", icone: ICONES.poubelle, aria: `Supprimer ${m.nom}` }));
     } else {
-      actions.append(bouton("Installer", `installer-${m.nom}`, () => api("/api/modele", { nom: m.nom, action: "installer" }), { icone: ICONES.telecharger }));
+      if (m.tient !== false) actions.append(bouton("Installer", `installer-${m.nom}`, () => api("/api/modele", { nom: m.nom, action: "installer" }), { icone: ICONES.telecharger }));
       if (dl?.statut === "erreur") li.append(el("div", "erreur", `Téléchargement raté : ${dl.erreur}`));
     }
     liste.append(li);
