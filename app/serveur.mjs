@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import os from "node:os";
 import { spawn, execFile } from "node:child_process";
 
-const VERSION = "1.2.1";
+const VERSION = "1.3.0";
 const DATA = process.env.DATA || "/data";
 const CONFIG = `${DATA}/config.json`;
 const OLLAMA = process.env.OLLAMA_URL || "http://127.0.0.1:11434";      // OLLAMA_URL : un Ollama déjà lancé ailleurs (tests)
@@ -17,11 +17,11 @@ const NUM_CTX = 2048;                                                    // un m
 // memoire = Go de carte graphique nécessaires, contexte de 2048 compris. pense : modèle qui sait réfléchir avant de
 // répondre : on lui coupe la réflexion, sinon avec 8 jetons au plus il n'écrirait jamais OUI ou NON.
 // Plus de 1b ni de 4b : ils se trompaient trop (0 sur 3 au test du réseau), Atlas les refuse
+// Validés avec « Tester le réseau » : gemma3:12b 3/3 à l'unanimité. Les ministral-3 (8b, 14b) hésitaient sur des cas
+// évidents (1/3 et 2/3) : retirés, comme gemma3:1b et 4b
 const MODELES = [
-  { nom: "ministral-3:8b", taille: 6, memoire: 7.5, label: "8b · léger" },
-  { nom: "gemma3:12b", taille: 8.1, memoire: 9.5, label: "12b · bon équilibre" },
-  { nom: "ministral-3:14b", taille: 9.1, memoire: 10.5, label: "14b · plus sûr" },
-  { nom: "gemma4:26b", taille: 18.7, memoire: 20.5, label: "26b · le plus sûr, très lourd", pense: true },
+  { nom: "gemma3:12b", taille: 8.1, memoire: 9.5, label: "12b · validé par Skyval" },
+  { nom: "gemma4:26b", taille: 18.7, memoire: 20.5, label: "26b · pour les cartes de 24 Go", pense: true },
 ];
 const PAGE = readFileSync(new URL("./page.html", import.meta.url), "utf8");
 

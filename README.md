@@ -20,7 +20,7 @@
 | **Une clé** | une par machine, donnée par l'administrateur de Skyval |
 | **Docker** | voir l'étape 2 |
 | **Disque** | 7 à 20 Go libres selon le modèle choisi |
-| **Carte graphique** | une carte NVIDIA avec au moins 8 Go de mémoire. Sans elle, Skyval Calcul ne peut pas aider : les modèles assez fiables sont trop lourds pour le processeur seul |
+| **Carte graphique** | une carte NVIDIA avec au moins 12 Go de mémoire. Sans elle, Skyval Calcul ne peut pas aider : les modèles assez fiables sont trop lourds pour une petite carte ou le processeur seul |
 
 Les cartes AMD et Intel ne sont pas utilisées : le PC est alors vu comme sans carte graphique.
 
@@ -211,23 +211,21 @@ Ouvre http://localhost:8642 dans ton navigateur.
    - À 50 %, le PC se repose autant de temps qu'il a calculé, et seule la moitié de la mémoire compte pour choisir le modèle.
    Tu peux continuer à utiliser ton PC normalement.
 3. **Tester ma machine** : regarde ta carte graphique, ta mémoire et le curseur, puis conseille un modèle.
-4. **Installer** le modèle conseillé (de 6 à 19 Go à télécharger), puis relance le test : il mesure le temps d'un vote.
+4. **Installer** le modèle conseillé (8 ou 19 Go à télécharger), puis relance le test : il mesure le temps d'un vote.
 5. **Disponible pour Skyval** : coche. Avec « Disponible dès le démarrage du conteneur », ton PC se rend disponible tout seul à chaque démarrage.
 
 Pendant un calcul, l'interface affiche « Calcul en cours » et les réglages sont bloqués, de quelques secondes à quelques
-minutes : le temps de trier un mail, soit 5 à 10 votes par question.
+minutes : le temps de trier un mail (un ou deux tours de votes par question, réglés par l'administrateur de Skyval).
 
 | Modèle | Téléchargement | Mémoire | Pour quelle carte |
 |---|---|---|---|
-| ministral-3:8b | 6 Go | 7,5 Go | 8 Go, curseur à fond (RTX 3060 Ti, 3070, 4060, 4060 Ti 8 Go…) |
-| gemma3:12b | 8,1 Go | 9,5 Go | 12 Go (RTX 3060 12 Go, 4070, 4070 SUPER…) |
-| ministral-3:14b | 9,1 Go | 10,5 Go | 12 Go curseur à fond, 16 Go (RTX 4060 Ti 16 Go, 4070 Ti SUPER, 4080…) |
+| gemma3:12b | 8,1 Go | 9,5 Go | 12 Go et plus (RTX 3060 12 Go, 4060 Ti 16 Go, 4070, 4070 SUPER, 4080…) |
 | gemma4:26b | 18,7 Go | 20,5 Go | 24 Go (RTX 3090, 4090, 5090…) |
 
 Le test conseille le plus gros modèle qui tient dans la mémoire autorisée par le curseur. Sans carte graphique, ou avec
-une carte de moins de 8 Go, aucun modèle n'est proposé : les petits modèles se trompent trop pour trier les mails.
+une carte de moins de 12 Go, aucun modèle n'est proposé : les modèles plus petits se trompent trop pour trier les mails.
 
-Les anciens modèles (gemma3:1b, gemma3:4b, gemma3:27b) ne sont plus utilisés par Skyval. S'ils sont encore installés,
+Les anciens modèles (gemma3:1b, gemma3:4b, gemma3:27b, ministral-3:8b, ministral-3:14b) ne sont plus utilisés par Skyval. S'ils sont encore installés,
 ils apparaissent sous « Anciens modèles » avec un bouton pour les supprimer du disque, et ce PC ne prend plus de calculs
 tant que l'un d'eux est le modèle utilisé : installe un modèle de la liste.
 
