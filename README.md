@@ -134,39 +134,50 @@ docker run --rm --gpus all ubuntu nvidia-smi
 
 ## 3. Lancer Skyval Calcul
 
-Crée un dossier `skyval-calcul` où tu veux, ouvre un terminal dedans, et télécharge le fichier qui correspond à ton PC.
+Crée un dossier `skyval-calcul` où tu veux et ouvre un terminal dedans. Prends ensuite **uniquement** le bloc de ton
+système : les commandes Linux ne marchent pas dans PowerShell, et inversement.
 
-**Avec une carte NVIDIA** : `docker-compose.yml`
+### Windows (PowerShell)
 
-```bash
-curl -fsSLO https://raw.githubusercontent.com/Thibaud165/skyval-calcul/main/docker-compose.yml
-```
+Dans l'Explorateur, ouvre le dossier `skyval-calcul`, tape `powershell` dans la barre d'adresse puis Entrée.
 
-Sous Windows (PowerShell) :
+**Avec une carte NVIDIA** :
 
 ```powershell
 Invoke-WebRequest https://raw.githubusercontent.com/Thibaud165/skyval-calcul/main/docker-compose.yml -OutFile docker-compose.yml
 ```
 
-Puis lance :
-
-```bash
+```powershell
 docker compose up -d
 ```
 
-**Sans carte NVIDIA (ou sur Mac)** : `docker-compose.cpu.yml`
-
-```bash
-curl -fsSLO https://raw.githubusercontent.com/Thibaud165/skyval-calcul/main/docker-compose.cpu.yml
-```
-
-Sous Windows (PowerShell) :
+**Sans carte NVIDIA** :
 
 ```powershell
 Invoke-WebRequest https://raw.githubusercontent.com/Thibaud165/skyval-calcul/main/docker-compose.cpu.yml -OutFile docker-compose.cpu.yml
 ```
 
-Puis lance :
+```powershell
+docker compose -f docker-compose.cpu.yml up -d
+```
+
+### Linux et macOS (Terminal)
+
+**Avec une carte NVIDIA (Linux)** :
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/Thibaud165/skyval-calcul/main/docker-compose.yml
+```
+
+```bash
+docker compose up -d
+```
+
+**Sans carte NVIDIA, ou sur Mac** :
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/Thibaud165/skyval-calcul/main/docker-compose.cpu.yml
+```
 
 ```bash
 docker compose -f docker-compose.cpu.yml up -d
@@ -221,6 +232,7 @@ et une clé différents (ex. « PC fixe (Linux) » et « PC fixe (Windows) »). 
 | « Atlas injoignable » | Tailscale est-il connecté ? Le partage d'Atlas est-il accepté ? Teste `ping 100.95.29.38`. |
 | « Clé refusée » | La clé est mal collée, ou elle a été supprimée : demande-en une nouvelle à l'administrateur. |
 | Windows : Docker Desktop affiche « WSL 2 installation is incomplete » ou ne démarre pas | Relance `wsl --update` dans PowerShell (administrateur), redémarre, et vérifie que la virtualisation est activée (étape 2a). |
+| Windows : « Impossible de trouver un paramètre correspondant au nom « fsSLO » » | C'est la commande Linux : dans PowerShell, prends le bloc Windows de l'étape 3 (`Invoke-WebRequest`). |
 | Windows : `wsl --install` affiche l'aide au lieu d'installer | WSL est déjà là : fais `wsl --update` puis `wsl --set-default-version 2`. |
 | Le test dit « Aucune » carte graphique | Windows : pilote NVIDIA à jour et Docker Desktop en mode WSL 2. Linux : refais l'installation de `nvidia-container-toolkit`. Puis `docker compose down` et `docker compose up -d`. |
 | `docker compose up` dit « could not select device driver nvidia » | Docker ne voit pas de carte NVIDIA : vérifie avec `docker run --rm --gpus all ubuntu nvidia-smi`, sinon utilise `docker-compose.cpu.yml`. |
