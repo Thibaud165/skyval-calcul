@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import os from "node:os";
 import { spawn, execFile } from "node:child_process";
 
-const VERSION = "1.0.0";
+const VERSION = "1.1.0";
 const DATA = process.env.DATA || "/data";
 const CONFIG = `${DATA}/config.json`;
 const OLLAMA = process.env.OLLAMA_URL || "http://127.0.0.1:11434";      // OLLAMA_URL : un Ollama déjà lancé ailleurs (tests)
@@ -56,7 +56,7 @@ const pret = () => Boolean(config.modele && installes.includes(config.modele));
 const threads = () => Math.max(1, Math.round(os.cpus().length * config.usage / 100));
 
 async function generer(prompt, options = {}) {
-  const d = await ollama("/api/generate", { model: config.modele, prompt, stream: false, keep_alive: "5m", options: { ...options, num_ctx: NUM_CTX, num_thread: threads() } });
+  const d = await ollama("/api/generate", { model: config.modele, prompt, stream: false, keep_alive: "30s", options: { ...options, num_ctx: NUM_CTX, num_thread: threads() } });   // modèle déchargé 30 s après le dernier calcul : la carte graphique se libère vite
   return d.response;
 }
 
