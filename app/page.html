@@ -5,179 +5,449 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Skyval Calcul</title>
 <style>
-  :root{--fond:#111826;--carte:#1B2436;--carte2:#28344C;--texte:#EAF0FA;--texte2:#A9B8D3;--accent:#F2A33D;--bleu:#5BB0F0;--vert:#4ADE80;--rouge:#FF8A7A;--trait:#36445F}
+  /* Skyval Calcul : même ambiance que l'immeuble Skyval (pixel art, plaques sombres, accent orange). Aucune ressource externe. */
+  @font-face{font-family:"Pixelify Sans";font-weight:400 700;font-display:swap;src:url(/fonts/pixelify.woff2) format("woff2")}
+  @font-face{font-family:"Geist Mono";font-weight:100 900;font-display:swap;src:url(/fonts/geist-mono.woff2) format("woff2")}
+  @font-face{font-family:"IBM Plex Sans";font-weight:400;font-display:swap;src:url(/fonts/plex-400.woff2) format("woff2")}
+  @font-face{font-family:"IBM Plex Sans";font-weight:500;font-display:swap;src:url(/fonts/plex-500.woff2) format("woff2")}
+  @font-face{font-family:"IBM Plex Sans";font-weight:600 700;font-display:swap;src:url(/fonts/plex-600.woff2) format("woff2")}
+  :root{
+    --fond:#1B2436;--fond2:#28344C;--fond3:#111826;--nuit:#0B1120;--texte:#EAF0FA;--texte2:#A9B8D3;
+    --accent:#F2A33D;--accent2:#5BB0F0;--vertv:#4ADE80;--rouge:#FF8A7A;--trait:#36445F;
+    --px-plaque:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 9 9' shape-rendering='crispEdges'%3E%3Cpath fill='%230B1120' d='M1 0h7v1H1zM0 1h1v7H0zM8 1h1v7H8zM1 8h7v1H1zM1 1h1v1H1zM7 1h1v1H7zM1 7h1v1H1zM7 7h1v1H7z'/%3E%3Cpath fill='%231B2436' d='M2 1h5v1H2zM1 2h7v5H1zM2 7h5v1H2z'/%3E%3Cpath fill='%23384868' d='M2 1h5v1H2zM1 2h1v5H1z'/%3E%3Cpath fill='%23121929' d='M2 7h5v1H2zM7 2h1v5H7z'/%3E%3C/svg%3E");
+    --px-tuile:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 9 9' shape-rendering='crispEdges'%3E%3Cpath fill='%230E1524' d='M1 0h7v1H1zM0 1h1v7H0zM8 1h1v7H8zM1 8h7v1H1z'/%3E%3Cpath fill='%2328344C' d='M1 1h7v7H1z'/%3E%3Cpath fill='%233A4A68' d='M1 1h7v1H1z'/%3E%3Cpath fill='%231E283C' d='M1 7h7v1H1z'/%3E%3C/svg%3E");
+    --px-tuile-on:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 9 9' shape-rendering='crispEdges'%3E%3Cpath fill='%237A4A0E' d='M1 0h7v1H1zM0 1h1v7H0zM8 1h1v7H8zM1 8h7v1H1z'/%3E%3Cpath fill='%23F2A33D' d='M1 1h7v7H1z'/%3E%3Cpath fill='%23FFD08A' d='M1 1h7v1H1z'/%3E%3Cpath fill='%23C67C1E' d='M1 7h7v1H1z'/%3E%3C/svg%3E");
+    --px-ombre:6px 6px 0 rgba(8,14,28,.38);
+    --pixel:"Geist Mono",ui-monospace,Consolas,monospace;
+    --logo:"Pixelify Sans","Geist Mono",monospace;
+    --plex:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    color-scheme:dark;
+  }
+  html{font-size:clamp(13px,.45vw + 7.5px,16px)}
   *{box-sizing:border-box}
-  body{margin:0;background:var(--fond);color:var(--texte);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
-  main{max-width:720px;margin:0 auto;padding:24px 16px 48px}
-  header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
-  h1{font-size:22px;margin:0;letter-spacing:.01em}
-  h1 span{color:var(--accent)}
-  h2{font-size:15px;margin:0 0 10px;color:var(--texte2);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
-  .pastille{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:999px;background:var(--carte2);font-size:13px;font-weight:600}
-  .pastille i{width:9px;height:9px;border-radius:50%;background:#64748B}
-  .pastille.vert i{background:var(--vert)} .pastille.bleu i{background:var(--bleu);animation:cl 1s infinite} .pastille.ambre i{background:var(--accent)} .pastille.rouge i{background:var(--rouge)}
-  @keyframes cl{50%{opacity:.3}}
-  section{background:var(--carte);border-radius:14px;padding:16px 18px;margin-bottom:14px}
-  .bandeau{background:#173252;border:1px solid var(--bleu);color:#CFE6FF;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-weight:600}
-  label{display:block;font-size:13px;color:var(--texte2);margin:8px 0 4px}
-  input[type=text],input[type=password]{width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--trait);background:var(--fond);color:var(--texte);font:inherit}
-  button{font:600 14px system-ui,sans-serif;border:0;border-radius:10px;padding:9px 16px;background:var(--carte2);color:var(--texte);cursor:pointer}
-  button.plein{background:var(--accent);color:#1B1206}
-  button:disabled{opacity:.45;cursor:not-allowed}
-  .ligne{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px}
-  .sous{color:var(--texte2);font-size:13px}
-  .ko{color:var(--rouge)} .ok{color:var(--vert)}
-  .interrupteur{display:flex;align-items:center;gap:12px;cursor:pointer;font-weight:600}
-  .interrupteur input{appearance:none;width:46px;height:26px;border-radius:999px;background:#475569;position:relative;cursor:pointer;margin:0;transition:background .15s}
-  .interrupteur input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s}
-  .interrupteur input:checked{background:var(--vert)} .interrupteur input:checked::after{left:23px}
-  .interrupteur input:disabled{opacity:.5;cursor:not-allowed}
-  input[type=range]{width:100%;accent-color:var(--accent)}
-  .grand{font-size:28px;font-weight:700}
-  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
-  td{padding:8px 4px;border-top:1px solid var(--trait);vertical-align:middle}
-  td:last-child{text-align:right;white-space:nowrap}
-  .tag{font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--carte2);color:var(--texte2);margin-left:6px}
-  .tag.conseil{background:#3B2A0E;color:var(--accent)} .tag.actuel{background:#12351F;color:var(--vert)}
-  .barre{height:6px;border-radius:3px;background:var(--trait);overflow:hidden;margin-top:4px}
-  .barre b{display:block;height:100%;background:var(--accent)}
-  details summary{cursor:pointer;color:var(--texte2);font-size:13px;margin-top:10px}
-  .grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:10px}
-  .grille div{background:var(--carte2);border-radius:10px;padding:8px 12px}
-  .grille b{display:block;font-size:15px}
-  .grille span{font-size:12px;color:var(--texte2)}
+  [hidden]{display:none !important}
+  body{margin:0;min-height:100vh;color:var(--texte);font:400 1rem/1.45 var(--plex);
+    background:#121A2A linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px) 0 0/24px 24px,#121A2A linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px) 0 0/24px 24px}
+  ::selection{background:#2A55C9;color:#fff}
+  :focus-visible{outline:3px solid #FFD08A;outline-offset:3px}
+  p{margin:0}
+
+  /* L'enseigne */
+  .enseigne{position:relative;z-index:2;display:flex;align-items:center;gap:18px;padding:.7rem 22px;background:#151D2E;box-shadow:0 3px 0 var(--nuit),0 6px 0 rgba(8,14,28,.25)}
+  .marque{display:flex;align-items:center;gap:12px;white-space:nowrap}
+  .marque .logo{font:500 1.6rem/1 var(--logo);color:#fff;letter-spacing:.02em}
+  .marque .sous-logo{font:700 .75rem/1 var(--pixel);text-transform:uppercase;letter-spacing:.16em;color:var(--accent);padding-left:12px;border-left:2px solid var(--trait)}
+  .marque .slogan{font-size:.85rem;color:var(--texte2);padding-left:12px;border-left:2px solid var(--trait)}
+  .bandeau{display:flex;align-items:center;gap:10px;min-width:0;padding:.45rem .8rem;background:#14304A;color:#CFE6FF;font:600 .88rem var(--plex);box-shadow:0 0 0 3px var(--nuit),inset 0 -3px 0 #0E2236,inset 0 2px 0 #24507A}
+  .pastille{margin-left:auto;display:inline-flex;align-items:center;gap:10px;padding:.42rem .85rem;background:var(--fond3);box-shadow:0 0 0 3px var(--nuit),4px 4px 0 3px rgba(8,14,28,.35);font:700 .85rem var(--pixel);letter-spacing:.03em;white-space:nowrap}
+
+  /* Voyants carrés */
+  .voyant{display:inline-block;width:10px;height:10px;flex:none;background:#3A4760;box-shadow:0 0 0 2px var(--nuit)}
+  .voyant.vert{background:var(--vertv)}
+  .voyant.ambre{background:var(--accent)}
+  .voyant.rouge{background:var(--rouge);animation:clignoteRouge 1.2s steps(2) infinite}
+  .voyant.bleu{background:var(--accent2);animation:clignoteBleu .8s steps(2) infinite}
+  @keyframes clignoteBleu{50%{background:#1E3A55}}
+  @keyframes clignoteRouge{50%{background:#6A2222}}
+
+  /* La grille : 3 colonnes qui tiennent dans l'écran sur PC */
+  .grille{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) minmax(0,1fr);gap:18px;padding:18px 22px 18px}
+  .col{display:flex;flex-direction:column;gap:18px;min-width:0;min-height:0}
+  .col > .carte:last-child{flex:1 0 auto}
+  .col-machine > .carte:last-child{flex:none}
+
+  /* Plaques et tuiles */
+  .carte{border:6px solid transparent;border-image:var(--px-plaque) 3 fill / 6px stretch;box-shadow:var(--px-ombre);padding:.85rem 1rem;min-width:0}
+  .tuile{border:3px solid transparent;border-image:var(--px-tuile) 3 fill / 3px stretch;padding:.5rem .7rem;min-width:0}
+  h2{display:flex;align-items:center;gap:10px;margin:0 0 .75rem;font:700 .8rem/1.2 var(--pixel);letter-spacing:.08em;text-transform:uppercase;color:#DCE6F7}
+  h2::before{content:"";width:8px;height:8px;background:var(--accent);box-shadow:2px 2px 0 #7A4A0E;flex:none;animation:voyantPlaque 2.4s steps(2) infinite}
+  h2 .droite{margin-left:auto;text-transform:none;letter-spacing:.04em}
+  @keyframes voyantPlaque{50%{background:#FFD08A}}
+  .aide{font-size:.86rem;color:var(--texte2)}
+  .ok{color:var(--vertv)} .ko{color:var(--rouge)}
+
+  /* Boutons : des touches qui s'enfoncent */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;cursor:pointer;white-space:nowrap;padding:.5rem .95rem;font:700 .82rem/1.2 var(--pixel);letter-spacing:.04em;color:var(--texte);background:#2A364E;box-shadow:0 0 0 2px var(--nuit),inset 0 -3px 0 rgba(0,0,0,.3),inset 0 2px 0 rgba(255,255,255,.12)}
+  .btn:hover:not(:disabled){background:#34425E}
+  .btn:active:not(:disabled){transform:translateY(2px);box-shadow:0 0 0 2px var(--nuit),inset 0 2px 0 rgba(0,0,0,.3)}
+  .btn.plein{background:var(--accent);color:var(--fond3);box-shadow:0 0 0 2px #7A4A0E,inset 0 -3px 0 #C67C1E,inset 0 2px 0 #FFD08A}
+  .btn.plein:hover:not(:disabled){background:#FFB95A}
+  .btn.danger:hover:not(:disabled){background:#4A1F1F;color:#FFB3A7}
+  .btn.icone{padding:.45rem .55rem}
+  .btn svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:square;flex:none}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+
+  /* Champs */
+  .champ{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:.75rem 0 .45rem;font:600 .86rem var(--plex);color:#DCE6F7}
+  .champ:first-of-type{margin-top:0}
+  .champ small{font-weight:400;font-size:.8rem;color:var(--texte2)}
+  input[type=text],input[type=password]{width:100%;padding:.55rem .75rem;border:0;border-radius:0;background:var(--fond3);color:var(--texte);font:400 .95rem var(--plex);box-shadow:0 0 0 3px var(--nuit),inset 0 3px 0 rgba(0,0,0,.35)}
+  input[type=text]:focus,input[type=password]:focus{outline:0;box-shadow:0 0 0 3px var(--accent),inset 0 3px 0 rgba(0,0,0,.35)}
+  input::placeholder{color:#7F8EAA}
+  details{margin-top:.7rem}
+  summary{cursor:pointer;width:max-content;font:700 .75rem var(--pixel);letter-spacing:.06em;text-transform:uppercase;color:#9CC7FF}
+  summary:hover{color:#fff}
+  .ligne{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:.85rem}
+  #etatAtlas{font-size:.86rem}
+
+  /* Interrupteurs pixel */
+  .inter{display:flex;align-items:center;gap:12px;cursor:pointer;font-weight:500}
+  .inter + .aide{margin:.35rem 0 .75rem 56px}
+  .inter input{appearance:none;-webkit-appearance:none;flex:none;position:relative;width:44px;height:24px;margin:0;cursor:pointer;background:#3A4760;box-shadow:0 0 0 2px var(--nuit),inset 0 3px 0 rgba(0,0,0,.35)}
+  .inter input::after{content:"";position:absolute;top:4px;left:4px;width:16px;height:16px;background:#C9D7F0;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25);transition:left .12s steps(3)}
+  .inter input:checked{background:#22A565}
+  .inter input:checked::after{left:24px;background:#fff}
+  .inter input:disabled{opacity:.5;cursor:not-allowed}
+  .inter.principal{font:600 1.02rem var(--plex)}
+  .inter.secondaire{font-size:.92rem;color:#DCE6F7}
+
+  /* Curseur d'utilisation */
+  .usage-tete{display:flex;align-items:center;gap:16px}
+  #usageVal{font:700 2.3rem/1 var(--pixel);color:var(--accent);letter-spacing:-.03em;min-width:4.2ch}
+  .rythme{flex:1;min-width:0}
+  .cases{display:grid;grid-template-columns:repeat(20,1fr);gap:2px;height:14px}
+  .cases i{background:#2A364E;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25)}
+  .cases i.on{background:var(--accent);box-shadow:inset 0 -2px 0 #C67C1E}
+  .legende{display:flex;gap:14px;margin-top:5px;font:600 .7rem var(--pixel);letter-spacing:.05em;text-transform:uppercase;color:var(--texte2)}
+  .legende span::before{content:"";display:inline-block;width:8px;height:8px;margin-right:5px;background:#2A364E;vertical-align:0}
+  .legende span:first-child::before{background:var(--accent)}
+  input[type=range]{--p:72%;-webkit-appearance:none;appearance:none;display:block;width:100%;height:26px;margin:.7rem 0 .1rem;background:none;cursor:pointer}
+  input[type=range]::-webkit-slider-runnable-track{height:10px;background:linear-gradient(90deg,var(--accent) var(--p),#2A364E var(--p));box-shadow:0 0 0 2px var(--nuit)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:24px;margin-top:-7px;background:#FFD08A;box-shadow:0 0 0 2px var(--nuit),inset 0 -4px 0 #C67C1E}
+  input[type=range]::-moz-range-track{height:10px;background:#2A364E;box-shadow:0 0 0 2px var(--nuit)}
+  input[type=range]::-moz-range-progress{height:10px;background:var(--accent)}
+  input[type=range]::-moz-range-thumb{width:16px;height:24px;border:0;border-radius:0;background:#FFD08A;box-shadow:0 0 0 2px var(--nuit),inset 0 -4px 0 #C67C1E}
+  input[type=range]:disabled{opacity:.45;cursor:not-allowed}
+  input[type=range]:focus-visible{outline-offset:4px}
+  .graduations{display:flex;justify-content:space-between;font:600 .7rem var(--pixel);color:var(--texte2);margin-bottom:.5rem}
+
+  /* La machine : la baie animée */
+  .machine{display:flex;flex-direction:column}
+  .scene{position:relative;flex:1 1 auto;min-height:200px;overflow:hidden;background:#232831;box-shadow:inset 0 0 0 3px var(--nuit)}
+  .scene canvas{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+  .nom-baie{position:absolute;transform:translate(-50%,-100%);max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:3px 8px;font:700 .72rem var(--pixel);letter-spacing:.06em;text-transform:uppercase;color:#fff;background:rgba(11,17,32,.88);box-shadow:0 0 0 2px var(--nuit);pointer-events:none}
+  .etat{display:flex;align-items:flex-start;gap:12px;margin-top:.85rem}
+  .etat .voyant{margin-top:.5rem;width:12px;height:12px}
+  .etat b{display:block;font:700 1.3rem/1.2 var(--pixel);letter-spacing:-.01em}
+  .etat p{margin-top:.25rem;font-size:.9rem;color:var(--texte2)}
+
+  /* Tuiles de chiffres */
+  .tuiles{display:grid;gap:10px}
+  .tuiles.t3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .tuiles .tuile{display:flex;flex-direction:column;gap:2px}
+  .tuiles b{font:700 1.15rem/1.2 var(--pixel);letter-spacing:-.02em;overflow-wrap:anywhere}
+  .tuiles span{font-size:.78rem;color:var(--texte2);line-height:1.3}
+  .tuiles .tuile:nth-child(1) b{color:#F2A33D}.tuiles .tuile:nth-child(2) b{color:#7CC4FF}
+  .tuiles .tuile:nth-child(3) b{color:#4ADE80}.tuiles .tuile:nth-child(4) b{color:#FFD166}
+  .tuiles .tuile:nth-child(5) b{color:#B79CFF}.tuiles .tuile:nth-child(6) b{color:#5EE6D0}
+  .stats b{font-size:1.45rem}
+
+  /* Modèles */
+  .liste-modeles{list-style:none;margin:.65rem 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+  .modele{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:4px 14px;padding:.5rem .8rem}
+  .modele.utilise{box-shadow:inset 4px 0 0 var(--vertv)}
+  .poids{display:grid;grid-template-columns:repeat(2,8px);gap:3px}
+  .poids i{width:8px;height:8px;background:#1A2234;box-shadow:inset 0 0 0 1px #0E1524}
+  .poids i.on{background:#7CC4FF;box-shadow:inset 0 -2px 0 #3E7DB8}
+  .modele .nom{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;font:600 .98rem var(--plex)}
+  .modele .detail{font-size:.8rem;color:var(--texte2);margin-top:1px}
+  .modele .detail code{font:500 .78rem var(--pixel);color:#C9D7F0}
+  .modele .actions{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+  .modele .erreur{grid-column:2 / -1;font-size:.82rem;color:var(--rouge)}
+  .modele .progression{grid-column:2 / -1}
+  .tag{display:inline-flex;align-items:center;padding:2px 6px;font:700 .66rem/1.3 var(--pixel);letter-spacing:.06em;text-transform:uppercase;background:#2A364E;color:#C9D7F0;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25)}
+  .tag.actuel{background:#163A2A;color:var(--vertv)}
+  .tag.conseille{background:#3E2E12;color:#FFC46B}
+  .tag.gros{background:#4A1F1F;color:#FFB3A7}
+  .barre{height:8px;margin-top:4px;background:var(--fond3);box-shadow:0 0 0 2px var(--nuit)}
+  .barre b{display:block;height:100%;background:repeating-linear-gradient(90deg,#F2A33D 0 6px,#C67C1E 6px 8px);transition:width .4s steps(4)}
+  .pct{font:700 .8rem var(--pixel);color:#FFC46B;white-space:nowrap}
+
+  /* Test de la machine */
+  .vide-test{display:flex;align-items:center;gap:12px;padding:.8rem;background:var(--fond3);box-shadow:inset 0 3px 0 rgba(0,0,0,.3);font-size:.9rem;color:var(--texte2)}
+  .vide-test svg{width:22px;height:22px;stroke:#7CC4FF;stroke-width:1.8;fill:none;stroke-linecap:square;flex:none}
+  #bench-res .tuiles{margin-top:.2rem}
+  #bench-res .tuile{padding:.4rem .65rem}
+  #bench-res .tuiles b{font-size:1.02rem}
+  .conseil{margin-top:.75rem;padding:.55rem .75rem;font-size:.88rem;background:#3E2E12;color:#FFE4B8;box-shadow:0 0 0 2px #8A5A14}
+  .conseil.ko{background:#4A1F1F;color:#FFD3CB;box-shadow:0 0 0 2px #8A2E22}
+  #benchAide{margin:-.35rem 0 .75rem}
+
+  /* Message d'erreur */
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10;max-width:min(560px,calc(100% - 32px));padding:.7rem 1rem;background:#4A1F1F;color:#FFE0DA;font:500 .92rem var(--plex);box-shadow:0 0 0 3px var(--nuit),6px 6px 0 3px rgba(8,14,28,.45)}
+
+  /* PC : tout tient dans la fenêtre, chaque colonne défile seule si vraiment il le faut */
+  @media (min-width:1180px) and (min-height:620px){
+    html,body{height:100%}
+    body{display:flex;flex-direction:column;overflow:hidden}
+    .grille{flex:1;min-height:0;padding-right:16px}
+    .col{overflow-y:auto;overflow-x:hidden;padding:0 6px 6px 0;scrollbar-width:thin;scrollbar-color:#36445F transparent}
+    .machine{flex:1 1 0 !important;min-height:300px}
+  }
+  /* Fenêtre moyenne : 2 colonnes, la page défile */
+  @media (max-width:1179px){
+    .grille{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"machine modeles" "reglages modeles"}
+    .col-machine{grid-area:machine}.col-modeles{grid-area:modeles}.col-reglages{grid-area:reglages}
+    .scene{flex:none;height:260px}
+  }
+  /* Téléphone : une colonne */
+  @media (max-width:899px){
+    html{font-size:15px}
+    .enseigne{flex-wrap:wrap;gap:10px 14px;padding:.7rem 16px}
+    .bandeau{order:3;flex-basis:100%}
+    .marque .slogan{display:none}
+    .grille{grid-template-columns:minmax(0,1fr);grid-template-areas:"machine" "reglages" "modeles";gap:18px;padding:16px 16px 28px}
+    .col{gap:18px}
+    .scene{height:230px}
+    .modele{grid-template-columns:auto minmax(0,1fr)}
+    .modele .actions{grid-column:1 / -1;justify-content:flex-start}
+    .tuiles.t3,#bench-res .tuiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .stats{grid-template-columns:repeat(3,minmax(0,1fr)) !important}
+    .stats b{font-size:1.15rem}
+  }
+  @media (max-width:420px){.marque .logo{font-size:1.35rem}.pastille{font-size:.78rem}}
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none !important;transition:none !important}
+  }
 </style>
 </head>
 <body>
-<main>
-  <header><h1>Skyval <span>Calcul</span></h1><span id="pastille" class="pastille"><i></i><span>…</span></span></header>
-  <div id="bandeau" class="bandeau" hidden>Calcul en cours pour Skyval : les réglages sont bloqués le temps du calcul.</div>
+<header class="enseigne">
+  <div class="marque"><span class="logo">Skyval</span><span class="sous-logo">Calcul</span><span class="slogan">Ce PC prête sa carte graphique à Skyval</span></div>
+  <div id="bandeau" class="bandeau" hidden><i class="voyant bleu" aria-hidden="true"></i><span>Calcul en cours pour Skyval : les réglages sont bloqués le temps du calcul.</span></div>
+  <div id="pastille" class="pastille" role="status" aria-live="polite"><i class="voyant" aria-hidden="true"></i><span>…</span></div>
+</header>
 
-  <section>
-    <h2>Connexion</h2>
-    <label for="nom">Nom de cette machine (vu dans l'immeuble Skyval)</label>
-    <input id="nom" type="text" placeholder="ex. PC fixe (Windows)">
-    <label for="cle">Clé de la machine (donnée par l'administrateur de Skyval)</label>
-    <input id="cle" type="password" placeholder="colle la clé ici" autocomplete="off">
-    <details><summary>Avancé</summary>
-      <label for="atlas">Adresse d'Atlas</label>
-      <input id="atlas" type="text">
-    </details>
-    <div class="ligne"><button class="plein" id="connecter">Enregistrer</button><span id="etatAtlas" class="sous"></span></div>
-  </section>
+<main class="grille">
+  <div class="col col-machine">
+    <section class="carte machine" aria-labelledby="t-machine">
+      <h2 id="t-machine">Cette machine</h2>
+      <div class="scene" id="scene"><canvas id="baie" aria-hidden="true"></canvas><div class="nom-baie" id="nomBaie"></div></div>
+      <div class="etat"><i class="voyant" id="etatVoyant" aria-hidden="true"></i><div><b id="etatTitre">…</b><p id="etatDetail"></p></div></div>
+    </section>
+    <section class="carte" aria-labelledby="t-stats">
+      <h2 id="t-stats">Depuis le démarrage</h2>
+      <div class="tuiles t3 stats">
+        <div class="tuile"><b id="sCalculs">0</b><span id="sCalculsL">calcul fait</span></div>
+        <div class="tuile"><b id="sDernier">–</b><span>durée du dernier calcul</span></div>
+        <div class="tuile"><b id="sVersion">–</b><span>version du logiciel</span></div>
+      </div>
+    </section>
+  </div>
 
-  <section>
-    <h2>Disponibilité</h2>
-    <label class="interrupteur"><input type="checkbox" id="actif"> <span>Disponible pour Skyval</span></label>
-    <label class="interrupteur" style="margin-top:12px;font-weight:400"><input type="checkbox" id="demarrage"> <span>Disponible dès le démarrage du conteneur</span></label>
-    <p class="sous" id="aideActif"></p>
-  </section>
+  <div class="col col-modeles">
+    <section class="carte" aria-labelledby="t-modeles">
+      <h2 id="t-modeles">Modèles d'IA</h2>
+      <p class="aide">Il fait les calculs de Skyval sur ce PC. Plus il est gros, plus il est fiable et lourd.</p>
+      <ul id="modeles" class="liste-modeles"></ul>
+    </section>
+    <section class="carte" aria-labelledby="t-test">
+      <h2 id="t-test">Test de la machine <span class="droite"><button class="btn plein" id="bench" type="button">Tester ma machine</button></span></h2>
+      <p class="aide" id="benchAide">Mesure ta machine et conseille un modèle selon le curseur.</p>
+      <div id="bench-res" aria-live="polite"></div>
+    </section>
+  </div>
 
-  <section>
-    <h2>Utilisation du PC</h2>
-    <div class="ligne" style="margin-top:0"><span class="grand" id="usageVal">75 %</span><span class="sous" id="usageAide"></span></div>
-    <input type="range" id="usage" min="10" max="100" step="5">
-  </section>
-
-  <section>
-    <h2>Modèle d'IA</h2>
-    <div class="ligne" style="margin-top:0"><button id="bench">Tester ma machine</button><span class="sous" id="benchAide">Mesure ta machine et conseille un modèle selon le curseur.</span></div>
-    <div id="bench-res"></div>
-    <table id="modeles"></table>
-  </section>
-
-  <p class="sous" id="stats"></p>
+  <div class="col col-reglages">
+    <section class="carte" aria-labelledby="t-connexion">
+      <h2 id="t-connexion">Connexion</h2>
+      <label class="champ" for="nom">Nom de cette machine <small>vu dans l'immeuble Skyval</small></label>
+      <input id="nom" type="text" placeholder="ex. PC fixe (Windows)" autocomplete="off">
+      <label class="champ" for="cle">Clé de la machine <small>donnée par l'administrateur de Skyval</small></label>
+      <input id="cle" type="password" placeholder="colle la clé ici" autocomplete="off">
+      <details><summary>Avancé</summary>
+        <label class="champ" for="atlas" style="margin-top:.6rem">Adresse d'Atlas <small>le serveur de Skyval</small></label>
+        <input id="atlas" type="text" autocomplete="off" spellcheck="false">
+      </details>
+      <div class="ligne"><button class="btn plein" id="connecter" type="button">Enregistrer</button><span id="etatAtlas" class="aide" aria-live="polite"></span></div>
+    </section>
+    <section class="carte" aria-labelledby="t-dispo">
+      <h2 id="t-dispo">Disponibilité</h2>
+      <label class="inter principal"><input type="checkbox" id="actif"> <span>Disponible pour Skyval</span></label>
+      <p class="aide" id="aideActif"></p>
+      <label class="inter secondaire"><input type="checkbox" id="demarrage"> <span>Disponible dès le démarrage du conteneur</span></label>
+    </section>
+    <section class="carte" aria-labelledby="t-usage">
+      <h2 id="t-usage">Utilisation du PC</h2>
+      <div class="usage-tete">
+        <output id="usageVal" for="usage">75 %</output>
+        <div class="rythme" aria-hidden="true"><div class="cases" id="cases"></div><div class="legende"><span>calcul</span><span>repos</span></div></div>
+      </div>
+      <input type="range" id="usage" min="10" max="100" step="5" aria-label="Utilisation du PC, en pourcentage" aria-describedby="usageAide">
+      <div class="graduations" aria-hidden="true"><span>10 %</span><span>50 %</span><span>100 %</span></div>
+      <p class="aide" id="usageAide"></p>
+    </section>
+  </div>
 </main>
+<div id="toast" class="toast" role="alert" hidden></div>
+
 <script>
 const $ = (id) => document.getElementById(id);
 let e = null, saisi = false;
-async function api(chemin, corps) {
-  const r = await fetch(chemin, corps ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corps) } : undefined);
-  const d = await r.json();
-  if (!r.ok) { alert(d.erreur || "Erreur"); return null; }
-  return d;
-}
 const fr = (n) => String(n).replace(".", ",");
-const go = (n) => n >= 1e9 ? `${(n / 1e9).toFixed(1)} Go` : `${Math.round(n / 1e6)} Mo`;
+const go = (n) => n >= 1e9 ? `${fr((n / 1e9).toFixed(1))} Go` : `${Math.round(n / 1e6)} Mo`;
+const el = (tag, cls, txt) => { const n = document.createElement(tag); if (cls) n.className = cls; if (txt != null) n.textContent = txt; return n; };
+const ICONES = {
+  poubelle: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12M6 4V2h4v2M4 4l1 10h6l1-10M7 7v4M9 7v4"/></svg>',
+  telecharger: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8M4 7l4 4 4-4M2 14h12"/></svg>',
+  puce: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7zM10 2v5M14 2v5M10 17v5M14 17v5M2 10h5M2 14h5M17 10h5M17 14h5"/></svg>',
+};
+
+function signaler(msg) {
+  const t = $("toast"); t.textContent = msg; t.hidden = false;
+  clearTimeout(signaler.minuteur); signaler.minuteur = setTimeout(() => { t.hidden = true; }, 6000);
+}
+async function api(chemin, corps) {
+  try {
+    const r = await fetch(chemin, corps ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corps) } : undefined);
+    const d = await r.json();
+    if (!r.ok) { signaler(d.erreur || "Erreur"); return null; }
+    return d;
+  } catch { signaler("Skyval Calcul ne répond pas. Réessaie dans un instant."); return null; }
+}
+
+// L'état vu par Atlas, pour la pastille, la baie et la phrase sous la baie
+function lireEtat(e) {
+  const c = e.config, a = e.atlas.etat, pret = Boolean(c.modele && e.installes.includes(c.modele));
+  if (a === "a_configurer") return ["ambre", "À configurer", "eteint", "Entre le nom de ce PC et sa clé dans Connexion pour le relier à Skyval."];
+  if (a === "cle_refusee") return ["rouge", "Clé refusée", "erreur", "Skyval ne reconnaît pas cette clé. Demande la bonne à l'administrateur de Skyval."];
+  if (a === "attente") return ["", "Connexion…", "attente", "Ce PC cherche à joindre Atlas, le serveur de Skyval."];
+  if (a !== "connecte") return ["rouge", "Atlas injoignable", "erreur", "Atlas, le serveur de Skyval, ne répond pas. Vérifie la connexion internet de ce PC. Nouvel essai toutes les 10 s."];
+  if (e.enCalcul || e.reserve) return ["bleu", "Calcul en cours", "calcul", "Skyval utilise ce PC en ce moment. Les réglages reviennent à la fin du calcul."];
+  if (!e.actif) return ["", "Indisponible", "desactive", "Skyval n'enverra rien à ce PC tant qu'il est indisponible."];
+  if (!pret) return ["ambre", "Aucun modèle", "sans_modele", "Installe un modèle d'IA pour que Skyval puisse envoyer des calculs à ce PC."];
+  return ["vert", "Disponible", "libre", "Connecté à Skyval : ce PC attend le prochain calcul."];
+}
+
+let sigModeles = "", sigBench = "";
 function rendre() {
   if (!e) return;
   const c = e.config, bloque = e.reserve;
-  // Pastille : l'état vu par Atlas
-  const p = $("pastille");
-  const [cls, txt] = e.atlas.etat === "a_configurer" ? ["ambre", "À configurer"]
-    : e.atlas.etat === "cle_refusee" ? ["rouge", "Clé refusée"]
-    : e.atlas.etat === "attente" ? ["", "Connexion…"]
-    : e.atlas.etat !== "connecte" ? ["rouge", "Atlas injoignable"]
-    : e.enCalcul || bloque ? ["bleu", "Calcul en cours"]
-    : !e.actif ? ["", "Indisponible"]
-    : !c.modele || !e.installes.includes(c.modele) ? ["ambre", "Aucun modèle"]
-    : ["vert", "Disponible"];
-  p.className = `pastille ${cls}`; p.lastElementChild.textContent = txt;
+  // Pastille, baie et phrase d'état
+  const [cls, txt, baie, detail] = lireEtat(e);
+  $("pastille").firstElementChild.className = `voyant ${cls}`; $("pastille").lastElementChild.textContent = txt;
+  $("etatVoyant").className = `voyant ${cls}`; $("etatTitre").textContent = txt; $("etatDetail").textContent = detail;
+  document.title = `${txt} · Skyval Calcul`;
   $("bandeau").hidden = !bloque;
+  vue.baie = baie; vue.dl = Object.values(e.telechargements).some((d) => d.statut === "en_cours");
+  $("nomBaie").textContent = c.nom || "Sans nom"; placerNom();
+  if (calme.matches) dessiner(0);
   // Connexion : on ne remplit pas un champ pendant que tu écris
   if (!saisi) { $("nom").value = c.nom; $("atlas").value = c.atlas; $("cle").placeholder = c.cle ? `enregistrée (${c.cle})` : "colle la clé ici"; }
   $("etatAtlas").textContent = e.atlas.etat === "connecte" ? "Connecté à Atlas ✓" : e.atlas.erreur ? `Pas connecté : ${e.atlas.erreur}` : "";
-  $("etatAtlas").className = `sous ${e.atlas.etat === "connecte" ? "ok" : e.atlas.erreur ? "ko" : ""}`;
+  $("etatAtlas").className = `aide ${e.atlas.etat === "connecte" ? "ok" : e.atlas.erreur ? "ko" : ""}`;
   // Disponibilité
   $("actif").checked = e.actif; $("actif").disabled = bloque;
   $("demarrage").checked = c.demarrage; $("demarrage").disabled = bloque;
-  $("aideActif").textContent = e.actif ? (c.modele && e.installes.includes(c.modele) ? "Skyval peut envoyer des calculs à ce PC." : "Installe un modèle plus bas pour recevoir des calculs.") : "Skyval n'enverra rien à ce PC.";
+  $("aideActif").textContent = e.actif ? (c.modele && e.installes.includes(c.modele) ? "Skyval peut envoyer des calculs à ce PC." : "Installe un modèle d'IA pour recevoir des calculs.") : "Skyval n'enverra rien à ce PC.";
   // Utilisation
   if (document.activeElement !== $("usage")) $("usage").value = c.usage;
   $("usage").disabled = bloque;
   majUsage(Number($("usage").value));
-  // Banc d'essai
+  // Test de la machine
   $("bench").disabled = bloque || e.benchEnCours; $("bench").textContent = e.benchEnCours ? "Test en cours…" : "Tester ma machine";
-  const b = c.bench, res = $("bench-res");
-  res.innerHTML = "";
-  if (b?.erreur) res.innerHTML = `<p class="ko">${b.erreur}</p>`;
-  else if (b) {
-    const g = document.createElement("div"); g.className = "grille";
-    const cases = [[b.gpu ? b.gpu.nom : "Aucune", b.gpu ? `carte graphique · ${fr(b.gpu.vram)} Go` : "carte graphique (calcul sur le processeur)"], [`${b.cpus} cœurs`, b.cpu || "processeur"], [`${fr(b.ram)} Go`, "RAM"], [`${fr(b.budget)} Go`, `mémoire autorisée à ${b.usage} %`]];
-    if (b.secondes != null) cases.push([`${fr(b.secondes)} s`, `par vote avec ${b.modele}`]);
-    for (const [v, l] of cases) { const d = document.createElement("div"); d.innerHTML = `<b></b><span></span>`; d.firstChild.textContent = v; d.lastChild.textContent = l; g.append(d); }
-    res.append(g);
-    const conseil = document.createElement("p"); conseil.className = "sous";
-    conseil.textContent = b.conseille ? `Conseillé à ${b.usage} % : ${b.conseille}.${b.secondes > 20 ? " Ton modèle actuel est lent : prends plus petit." : ""}${b.usage !== c.usage ? " (curseur changé : relance le test)" : ""}` : "Aucun modèle ne tient dans la mémoire autorisée : monte le curseur.";
-    res.append(conseil);
+  $("bench-res").setAttribute("aria-busy", String(e.benchEnCours));
+  const b = c.bench, s1 = JSON.stringify([b, c.usage, c.modele]);
+  if (s1 !== sigBench) { sigBench = s1; rendreBench(b, c); }
+  // Modèles (reconstruits seulement s'ils changent : le focus clavier reste en place)
+  const s2 = JSON.stringify([e.modeles, c.modele, b?.conseille, e.telechargements, bloque]);
+  if (s2 !== sigModeles) { sigModeles = s2; rendreModeles(b, c); }
+  // Statistiques
+  $("sCalculs").textContent = e.stats.calculs;
+  $("sCalculsL").textContent = e.stats.calculs > 1 ? "calculs faits" : "calcul fait";
+  $("sDernier").textContent = e.stats.secondes != null ? `${fr(e.stats.secondes)} s` : "–";
+  $("sVersion").textContent = e.version;
+}
+
+function rendreBench(b, c) {
+  const res = $("bench-res"); res.replaceChildren();
+  if (b?.erreur) { res.append(el("p", "conseil ko", b.erreur)); return; }
+  if (!b) {
+    const v = el("div", "vide-test"); v.innerHTML = ICONES.puce;
+    v.append(el("span", null, "Pas encore testée. Le test regarde la carte graphique, le processeur et la mémoire, puis mesure la vitesse avec le modèle utilisé."));
+    res.append(v); return;
   }
-  // Modèles
-  const t = $("modeles"); t.innerHTML = "";
-  for (const m of e.modeles) {
-    const tr = document.createElement("tr"), td1 = document.createElement("td"), td2 = document.createElement("td");
-    td1.innerHTML = `<b></b>`; td1.firstChild.textContent = m.label;
+  const g = el("div", "tuiles t3");
+  const cases = [
+    [b.gpu ? b.gpu.nom : "Aucune", b.gpu ? `carte graphique · ${fr(b.gpu.vram)} Go` : "carte graphique (calcul sur le processeur)"],
+    [`${b.cpus} cœurs`, b.cpu || "processeur"],
+    [`${fr(b.ram)} Go`, "RAM"],
+    [`${fr(b.budget)} Go`, `mémoire autorisée à ${b.usage} %`],
+    b.secondes != null ? [`${fr(b.secondes)} s`, `par vote avec ${b.modele}`] : ["–", "vitesse : installe un modèle puis relance le test"],
+    [b.conseille || "Aucun", `modèle conseillé à ${b.usage} %`],
+  ];
+  for (const [v, l] of cases) { const d = el("div", "tuile"); d.append(el("b", null, v), el("span", null, l)); g.append(d); }
+  res.append(g);
+  res.append(el("p", b.conseille ? "conseil" : "conseil ko", b.conseille
+    ? `Conseillé à ${b.usage} % : ${b.conseille}.${b.secondes > 20 ? " Ton modèle actuel est lent : prends plus petit." : ""}${b.usage !== c.usage ? " (curseur changé : relance le test)" : ""}`
+    : "Aucun modèle ne tient dans la mémoire autorisée : monte le curseur."));
+}
+
+function rendreModeles(b, c) {
+  const liste = $("modeles"), focus = document.activeElement?.dataset?.cle;
+  liste.replaceChildren();
+  e.modeles.forEach((m, i) => {
+    const li = el("li", "modele tuile"), utilise = c.modele === m.nom && m.installe;
+    if (utilise) li.classList.add("utilise");
+    const poids = el("div", "poids"); poids.setAttribute("aria-hidden", "true");
+    for (let k = 0; k < 4; k++) poids.append(el("i", k <= i ? "on" : ""));
+    const info = el("div"), nom = el("div", "nom"); nom.append(el("span", null, m.label));
     const tags = [];
-    if (c.modele === m.nom && m.installe) tags.push(["actuel", "utilisé"]);
-    if (b?.conseille === m.nom) tags.push(["conseil", "conseillé"]);
-    if (m.possible === false) tags.push(["", "trop gros"]);
-    for (const [k, l] of tags) { const s = document.createElement("span"); s.className = `tag ${k}`; s.textContent = l; td1.append(s); }
-    const sous = document.createElement("div"); sous.className = "sous"; sous.textContent = `${m.nom} · ${fr(m.taille)} Go à télécharger · ${fr(m.memoire)} Go de mémoire`; td1.append(sous);
+    if (utilise) tags.push(["actuel", "utilisé"]);
+    if (b?.conseille === m.nom) tags.push(["conseille", "conseillé"]);
+    if (m.possible === false) tags.push(["gros", "trop gros"]);
+    for (const [k, l] of tags) nom.append(el("span", `tag ${k}`, l));
+    const detail = el("div", "detail"); detail.append(el("code", null, m.nom), ` · ${fr(m.taille)} Go à télécharger · ${fr(m.memoire)} Go de mémoire`);
+    info.append(nom, detail);
+    const actions = el("div", "actions");
+    li.append(poids, info, actions);
     const dl = e.telechargements[m.nom];
     if (dl?.statut === "en_cours") {
       const pct = dl.total ? Math.round(dl.fait / dl.total * 100) : 0;
-      const bar = document.createElement("div"); bar.className = "barre"; bar.innerHTML = `<b style="width:${pct}%"></b>`; td1.append(bar);
-      td2.textContent = dl.total ? `${pct} % · ${go(dl.fait)} / ${go(dl.total)}` : "Démarrage…";
+      actions.append(el("span", "pct", dl.total ? `${pct} %` : "Démarrage…"));
+      const p = el("div", "progression"), barre = el("div", "barre");
+      barre.setAttribute("role", "progressbar"); barre.setAttribute("aria-label", `Téléchargement de ${m.nom}`); barre.setAttribute("aria-valuenow", String(pct)); barre.setAttribute("aria-valuemin", "0"); barre.setAttribute("aria-valuemax", "100");
+      const rempli = el("b"); rempli.style.width = `${pct}%`; barre.append(rempli);
+      p.append(barre); if (dl.total) p.append(el("div", "detail", `${go(dl.fait)} / ${go(dl.total)} téléchargés`));
+      li.append(p);
     } else if (m.installe) {
-      if (c.modele !== m.nom) td2.append(bouton("Utiliser", () => api("/api/modele", { nom: m.nom, action: "utiliser" })));
-      td2.append(bouton("Supprimer", () => confirm(`Supprimer ${m.nom} du disque ?`) && api("/api/modele", { nom: m.nom, action: "supprimer" })));
+      if (c.modele !== m.nom) actions.append(bouton("Utiliser", `utiliser-${m.nom}`, () => api("/api/modele", { nom: m.nom, action: "utiliser" }), { cls: "plein" }));
+      actions.append(bouton("", `supprimer-${m.nom}`, () => confirm(`Supprimer ${m.nom} du disque ?`) && api("/api/modele", { nom: m.nom, action: "supprimer" }), { cls: "icone danger", icone: ICONES.poubelle, aria: `Supprimer ${m.nom}` }));
     } else {
-      if (dl?.statut === "erreur") { const s = document.createElement("div"); s.className = "sous ko"; s.textContent = dl.erreur; td1.append(s); }
-      td2.append(bouton("Installer", () => api("/api/modele", { nom: m.nom, action: "installer" })));
+      actions.append(bouton("Installer", `installer-${m.nom}`, () => api("/api/modele", { nom: m.nom, action: "installer" }), { icone: ICONES.telecharger }));
+      if (dl?.statut === "erreur") li.append(el("div", "erreur", `Téléchargement raté : ${dl.erreur}`));
     }
-    tr.append(td1, td2); t.append(tr);
-  }
-  $("stats").textContent = `${e.stats.calculs} calcul${e.stats.calculs > 1 ? "s faits" : " fait"} depuis le démarrage${e.stats.secondes != null ? ` · dernier : ${fr(e.stats.secondes)} s` : ""} · version ${e.version}`;
+    liste.append(li);
+  });
+  if (focus) liste.querySelector(`[data-cle="${CSS.escape(focus)}"]`)?.focus();
 }
-function bouton(txt, f) { const b = document.createElement("button"); b.textContent = txt; b.style.marginLeft = "6px"; b.disabled = e.reserve; b.onclick = async () => { b.disabled = true; const d = await f(); if (d) { e = d; rendre(); } else b.disabled = false; }; return b; }
+function bouton(txt, cle, f, { cls = "", icone = null, aria = null } = {}) {
+  const b = el("button", `btn ${cls}`); b.type = "button"; b.dataset.cle = cle;
+  if (icone) b.innerHTML = icone;
+  if (txt) b.append(txt);
+  if (aria) { b.setAttribute("aria-label", aria); b.title = aria; }
+  b.disabled = e.reserve;
+  b.onclick = async () => { b.disabled = true; const d = await f(); if (d) { e = d; rendre(); } else b.disabled = e.reserve; };
+  return b;
+}
+
+// Curseur : explication de la pause et de la mémoire autorisée, et le rythme calcul / repos en 20 cases
+const cases = $("cases");
+for (let i = 0; i < 20; i++) cases.append(el("i"));
 function majUsage(u) {
   $("usageVal").textContent = `${u} %`;
+  $("usage").style.setProperty("--p", `${(u - 10) / 90 * 100}%`);
+  [...cases.children].forEach((c, i) => c.classList.toggle("on", i < Math.round(u / 5)));
   const b = e?.materiel ? Math.round((e.materiel.gpu ? e.materiel.gpu.vram : e.materiel.ram / 2) * u / 10) / 10 : null;
-  const pause = u === 100 ? "aucune pause entre deux calculs" : `après 1 s de calcul, le PC se repose ${String(Math.round((100 - u) / u * 10) / 10).replace(".", ",")} s`;
-  $("usageAide").textContent = `${pause}${b != null ? ` · ${String(b).replace(".", ",")} Go de mémoire autorisés` : ""}`;
+  const pause = u === 100 ? "Aucune pause entre deux calculs" : `Après 1 s de calcul, le PC se repose ${fr(Math.round((100 - u) / u * 10) / 10)} s`;
+  $("usageAide").textContent = `${pause}${b != null ? ` · ${fr(b)} Go de mémoire autorisés` : ""}.`;
 }
+
 ["nom", "cle", "atlas"].forEach((id) => { $(id).addEventListener("input", () => { saisi = true; }); });
 $("connecter").onclick = async () => {
+  $("connecter").disabled = true;
   const d = await api("/api/connexion", { nom: $("nom").value, cle: $("cle").value, atlas: $("atlas").value });
+  $("connecter").disabled = false;
   if (d) { e = d; saisi = false; $("cle").value = ""; rendre(); }
 };
 $("actif").onchange = async () => { const d = await api("/api/reglages", { actif: $("actif").checked }); if (d) e = d; rendre(); };
@@ -185,6 +455,108 @@ $("demarrage").onchange = async () => { const d = await api("/api/reglages", { d
 $("usage").oninput = () => majUsage(Number($("usage").value));
 $("usage").onchange = async () => { const d = await api("/api/reglages", { usage: Number($("usage").value) }); if (d) e = d; rendre(); };
 $("bench").onclick = async () => { const d = await api("/api/bench", {}); if (d) { e = d; rendre(); } };
+
+// ---------- La baie : ce PC dessiné comme une baie du data center de l'immeuble ----------
+// Voyants : vert disponible, bleu et orange qui clignotent en calcul, ambre indisponible, éteinte sans connexion
+const toile = $("baie"), ctx = toile.getContext("2d"), scene = $("scene");
+const calme = matchMedia("(prefers-reduced-motion: reduce)");
+const vue = { baie: "eteint", dl: false };
+const BL = 44, BH = 84;
+let SW = 0, SH = 0, K = 2, bx = 0, haut = 0;
+const R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+const hash = (a, b) => { let h = Math.imul(a, 374761393) + Math.imul(b, 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return (h ^ (h >>> 16)) >>> 0; };
+function dimensionner() {
+  const r = scene.getBoundingClientRect();
+  if (!r.width || !r.height) return;
+  K = Math.max(2, Math.floor(Math.min(r.height / 118, r.width / 110)));   // assez de place pour l'écran et la clim à côté de la baie
+  SW = Math.floor(r.width / K); SH = Math.floor(r.height / K);
+  toile.width = SW; toile.height = SH; toile.style.width = `${SW * K}px`; toile.style.height = `${SH * K}px`;
+  dessiner(calme.matches ? 0 : performance.now() / 1000); placerNom();
+}
+function placerNom() {
+  const n = $("nomBaie"), r = scene.getBoundingClientRect();
+  n.style.left = `${r.width / 2 + (bx + BL / 2 - SW / 2) * K}px`;
+  n.style.top = `${r.height / 2 + (haut - 5 - SH / 2) * K}px`;
+}
+function couleurLed(st, u, k, t) {
+  const n = hash(u * 7 + k, Math.floor(t * (st === "calcul" ? 9 : 1.4)) + u * 3) % 10;   // chaque voyant clignote à sa façon
+  if (st === "eteint") return "#20252E";
+  if (st === "erreur") return u === 7 && k === 0 ? (Math.floor(t * 2) % 2 ? "#FF5A4A" : "#6A2222") : "#20252E";
+  if (st === "attente") return k === 0 && u === Math.floor(t * 6) % 8 ? "#5BB0F0" : "#20252E";
+  if (st === "desactive" || st === "sans_modele") return k === 0 ? "#F2A33D" : "#20252E";
+  if (st === "libre") return k === 0 ? "#4ADE80" : n < 2 ? "#4ADE80" : "#1F4A30";
+  return k === 0 ? (n < 6 ? "#5BB0F0" : "#1E3A55") : n < 5 ? "#F2A33D" : "#4ADE80";
+}
+function dessiner(t) {
+  if (!SW) return;
+  const st = vue.baie, calcul = st === "calcul", eteint = ["eteint", "erreur", "attente"].includes(st), relie = !eteint;
+  const sol = SH - Math.max(16, Math.round(SH * .17));
+  bx = Math.floor(SW / 2 - BL / 2); haut = sol + 5 - BH;
+  // Le mur en panneaux, le faux plafond, les néons et le chemin de câbles
+  R(0, 0, SW, SH, "#232831");
+  for (let x = 0; x < SW; x += 32) { R(x, 7, 31, sol - 7, "#3B4250"); R(x, 7, 31, 1, "#4B5363"); R(x + 31, 7, 1, sol - 7, "#2B313C"); R(x + 7, 24, 2, 2, "#2F3541"); R(x + 23, 24, 2, 2, "#2F3541"); }
+  R(0, 0, SW, 7, "#1A1E26");
+  for (let x = 6; x < SW - 20; x += 44) { R(x - 1, 1, 26, 4, "#2E3440"); R(x, 2, 24, 2, "#E8F4FF"); }
+  R(0, 10, SW, 3, "#C9A23D"); for (let x = 0; x < SW; x += 6) R(x, 10, 1, 3, "#8A6E22");
+  // L'écran de supervision à gauche (la courbe s'agite pendant un calcul)
+  const ew = Math.min(46, bx - 10);
+  if (ew >= 20) {
+    const ex = bx - ew - 6, ey = Math.max(18, sol - 66);
+    R(ex - 2, ey - 2, ew + 4, 30, "#3A404C"); R(ex, ey, ew, 26, "#0B1018");
+    if (relie) for (let i = 0; i < ew - 2; i++) { const v = Math.sin((i + t * 30) / 5) * (calcul ? 7 : 2) + Math.sin((i * 3 + t * 50) / 9) * (calcul ? 3 : 1); R(ex + 1 + i, ey + 14 + Math.round(v), 1, 1, calcul ? "#5BB0F0" : st === "libre" ? "#4ADE80" : "#F2A33D"); }
+    else { R(ex + 3, ey + 14, ew - 6, 1, "#1E2633"); if (Math.floor(t * 2) % 2 === 0) R(ex + 3, ey + 3, 3, 4, st === "erreur" ? "#FF5A4A" : "#3A4760"); }
+    if (relie) { R(ex + 3, ey + 3, 10, 2, calcul ? "#5BB0F0" : "#4ADE80"); R(ex + 16, ey + 3, 6, 2, "#2A4A60"); }
+  }
+  // La climatisation à droite, ventilateurs qui tournent
+  const cw = Math.min(30, SW - (bx + BL) - 10);
+  if (cw >= 18) {
+    const cx = bx + BL + 8, cy = Math.max(18, sol - 52);
+    R(cx, cy, cw, sol - cy, "#B9C0CC"); R(cx, cy, cw, 2, "#D6DCE4"); R(cx + cw - 2, cy + 2, 2, sol - cy - 2, "#8E96A4");
+    const fx = cx + Math.floor((cw - 14) / 2), fy = cy + 7, a = Math.floor(t * (calcul ? 14 : 6)) % 2;
+    R(fx, fy, 14, 14, "#4A5160"); R(fx + 6, fy + 6, 2, 2, "#B9C0CC"); R(fx + (a ? 2 : 6), fy + (a ? 6 : 2), a ? 10 : 2, a ? 2 : 10, "#8E96A4");
+    R(cx + 4, fy + 20, cw - 8, 2, relie ? "#4ADE80" : "#5A606C");
+  }
+  // Le sol technique
+  for (let y = sol, r = 0; y < SH; y += 12, r++) for (let x = 0, c = 0; x < SW; x += 12, c++) {
+    R(x, y, 12, 12, (r + c) % 2 ? "#525A68" : "#4D5462"); R(x, y, 12, 1, "#636B79"); R(x + 11, y, 1, 12, "#434A57");
+  }
+  R(0, sol, SW, 3, "rgba(0,0,0,.28)");
+  // La fibre qui descend du plafond jusqu'à la baie : des paquets y circulent quand Atlas parle à ce PC
+  const fx = bx + BL - 12;
+  R(fx, 13, 2, haut - 13, relie ? "#2E3440" : "#262B35");
+  const course = Math.max(1, haut - 13 - 3);
+  if (relie) R(fx, 13 + Math.floor((t * (calcul ? 55 : 16)) % course), 2, 3, "#5BB0F0");
+  if (calcul) R(fx, 13 + course - Math.floor((t * 38) % course), 2, 3, "#F2A33D");
+  if (vue.dl) for (let i = 0; i < 3; i++) R(fx, 13 + Math.floor((t * 70 + i * course / 3) % course), 2, 2, "#FFD08A");
+  if (st === "erreur") R(fx - 1, 11, 4, 2, Math.floor(t * 2) % 2 ? "#FF5A4A" : "#6A2222");
+  // La baie (même dessin que le data center de l'immeuble), plus grande lueur pendant un calcul
+  if (calcul) { ctx.fillStyle = `rgba(91,176,240,${(0.14 + 0.07 * Math.sin(t * 6)).toFixed(3)})`; ctx.fillRect(bx - 7, haut - 7, BL + 14, BH + 12); }
+  R(bx + 3, sol + 3, BL, 5, "rgba(0,0,0,.35)");
+  R(bx, haut, BL, BH, eteint ? "#14181F" : "#1C2230");
+  R(bx, haut, BL, 6, eteint ? "#232831" : "#2E3647"); R(bx, haut, BL, 1, eteint ? "#2C323C" : "#3E4860");
+  R(bx + 4, haut + 2, 8, 2, eteint ? "#5A3A12" : "#F2A33D");
+  R(bx, haut + 6, 2, BH - 6, eteint ? "#1E232B" : "#2A3242"); R(bx + BL - 2, haut + 6, 2, BH - 6, "#0E1118");
+  for (let u = 0; u < 8; u++) {
+    const y = haut + 9 + u * 9;
+    R(bx + 4, y, BL - 8, 7, eteint ? "#1C2028" : "#2A3242"); R(bx + 4, y, BL - 8, 1, eteint ? "#232831" : "#3A4458");
+    for (let g = 0; g < 5; g++) R(bx + 18 + g * 4, y + 2, 2, 3, "#121620");
+    R(bx + 7, y + 3, 2, 2, couleurLed(st, u, 0, t)); R(bx + 11, y + 3, 2, 2, couleurLed(st, u, 1, t));
+  }
+  if (calcul) {                                                          // la carte graphique chauffe : barre orange et air chaud
+    R(bx + 4, haut + 9 + 7 * 9 + 2, BL - 8, 2, Math.floor(t * 4) % 2 ? "#F2A33D" : "#C9802A");
+    for (let i = 0; i < 4; i++) R(bx + 8 + i * 9, haut - 4 - ((t * 18 + i * 5) % 12), 1, 3, "rgba(255,210,150,.5)");
+  }
+  R(bx, haut + BH - 3, BL, 3, "#0B0E14");
+}
+new ResizeObserver(dimensionner).observe(scene);
+let derniere = 0;
+function boucle(now) {
+  if (!calme.matches && !document.hidden && now - derniere > 80) { derniere = now; dessiner(now / 1000); }
+  requestAnimationFrame(boucle);
+}
+requestAnimationFrame(boucle);
+calme.addEventListener?.("change", () => dessiner(0));
+
 async function charger() { try { e = await (await fetch("/api/etat")).json(); rendre(); } catch {} }
 charger(); setInterval(charger, 1500);
 </script>

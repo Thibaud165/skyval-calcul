@@ -184,6 +184,11 @@ http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, "http://x");
     if (req.method === "GET" && url.pathname === "/") { res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); return res.end(PAGE); }
+    if (req.method === "GET" && /^\/fonts\/[a-z0-9-]+\.woff2$/.test(url.pathname)) {   // polices de l'interface (app/fonts), marche hors ligne
+      const f = await fs.readFile(new URL(`.${url.pathname}`, import.meta.url)).catch(() => null);
+      if (!f) return json(res, 404, { erreur: "Introuvable" });
+      res.writeHead(200, { "Content-Type": "font/woff2", "Cache-Control": "max-age=86400" }); return res.end(f);
+    }
     if (req.method === "GET" && url.pathname === "/api/etat") return json(res, 200, etat());
     if (req.method !== "POST") return json(res, 404, { erreur: "Introuvable" });
     const c = await lireCorps(req);
