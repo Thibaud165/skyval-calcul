@@ -2,7 +2,7 @@
 # Lancer : docker compose up -d   ·   Interface : http://localhost:8642
 services:
   skyval-calcul:
-    image: ghcr.io/thibaud165/skyval-calcul:latest
+    image: thibaud165/skyval-calcul:latest
     container_name: skyval-calcul
     restart: unless-stopped
     ports:

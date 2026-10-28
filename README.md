@@ -183,7 +183,7 @@ curl -fsSLO https://raw.githubusercontent.com/Thibaud165/skyval-calcul/main/dock
 docker compose -f docker-compose.cpu.yml up -d
 ```
 
-Le premier lancement télécharge l'image (environ 2 Go). Le conteneur redémarre ensuite tout seul avec Docker, donc avec
+Le premier lancement télécharge l'image depuis Docker Hub (environ 4 Go, une seule fois). Le conteneur redémarre ensuite tout seul avec Docker, donc avec
 ton PC si Docker démarre avec lui.
 
 ## 4. Régler dans l'interface
@@ -251,5 +251,7 @@ et une clé différents (ex. « PC fixe (Linux) » et « PC fixe (Windows) »). 
   partagées n'atteignent que le port du calcul, ajoute dans les ACL Tailscale
   `{ "action": "accept", "src": ["autogroup:shared"], "dst": ["<nom d'Atlas>:4601"] }`
   et vérifie qu'aucune autre règle ne donne `*:*` à `autogroup:shared`.
-- **Publier une nouvelle version** : push sur `main`, GitHub construit l'image (`.github/workflows/image.yml`).
-  La première fois : Packages → skyval-calcul → Package settings → *Change visibility* → Public.
+- **Publier une nouvelle version** : push sur `main`. GitHub construit l'image (`.github/workflows/image.yml`) et la
+  publie sur Docker Hub (`thibaud165/skyval-calcul`, celle des fichiers docker-compose) et sur ghcr.io (copie de secours,
+  plus lente au téléchargement). Secrets du dépôt GitHub nécessaires : `DOCKERHUB_USERNAME` et `DOCKERHUB_TOKEN`
+  (jeton Docker Hub « Read & Write »).
