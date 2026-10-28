@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Skyval Calcul</title>
+<style>
+  :root{--fond:#111826;--carte:#1B2436;--carte2:#28344C;--texte:#EAF0FA;--texte2:#A9B8D3;--accent:#F2A33D;--bleu:#5BB0F0;--vert:#4ADE80;--rouge:#FF8A7A;--trait:#36445F}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fond);color:var(--texte);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+  main{max-width:720px;margin:0 auto;padding:24px 16px 48px}
+  header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  h1{font-size:22px;margin:0;letter-spacing:.01em}
+  h1 span{color:var(--accent)}
+  h2{font-size:15px;margin:0 0 10px;color:var(--texte2);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+  .pastille{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:999px;background:var(--carte2);font-size:13px;font-weight:600}
+  .pastille i{width:9px;height:9px;border-radius:50%;background:#64748B}
+  .pastille.vert i{background:var(--vert)} .pastille.bleu i{background:var(--bleu);animation:cl 1s infinite} .pastille.ambre i{background:var(--accent)} .pastille.rouge i{background:var(--rouge)}
+  @keyframes cl{50%{opacity:.3}}
+  section{background:var(--carte);border-radius:14px;padding:16px 18px;margin-bottom:14px}
+  .bandeau{background:#173252;border:1px solid var(--bleu);color:#CFE6FF;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-weight:600}
+  label{display:block;font-size:13px;color:var(--texte2);margin:8px 0 4px}
+  input[type=text],input[type=password]{width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--trait);background:var(--fond);color:var(--texte);font:inherit}
+  button{font:600 14px system-ui,sans-serif;border:0;border-radius:10px;padding:9px 16px;background:var(--carte2);color:var(--texte);cursor:pointer}
+  button.plein{background:var(--accent);color:#1B1206}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .ligne{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px}
+  .sous{color:var(--texte2);font-size:13px}
+  .ko{color:var(--rouge)} .ok{color:var(--vert)}
+  .interrupteur{display:flex;align-items:center;gap:12px;cursor:pointer;font-weight:600}
+  .interrupteur input{appearance:none;width:46px;height:26px;border-radius:999px;background:#475569;position:relative;cursor:pointer;margin:0;transition:background .15s}
+  .interrupteur input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s}
+  .interrupteur input:checked{background:var(--vert)} .interrupteur input:checked::after{left:23px}
+  .interrupteur input:disabled{opacity:.5;cursor:not-allowed}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .grand{font-size:28px;font-weight:700}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+  td{padding:8px 4px;border-top:1px solid var(--trait);vertical-align:middle}
+  td:last-child{text-align:right;white-space:nowrap}
+  .tag{font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--carte2);color:var(--texte2);margin-left:6px}
+  .tag.conseil{background:#3B2A0E;color:var(--accent)} .tag.actuel{background:#12351F;color:var(--vert)}
+  .barre{height:6px;border-radius:3px;background:var(--trait);overflow:hidden;margin-top:4px}
+  .barre b{display:block;height:100%;background:var(--accent)}
+  details summary{cursor:pointer;color:var(--texte2);font-size:13px;margin-top:10px}
+  .grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:10px}
+  .grille div{background:var(--carte2);border-radius:10px;padding:8px 12px}
+  .grille b{display:block;font-size:15px}
+  .grille span{font-size:12px;color:var(--texte2)}
+</style>
+</head>
+<body>
+<main>
+  <header><h1>Skyval <span>Calcul</span></h1><span id="pastille" class="pastille"><i></i><span>…</span></span></header>
+  <div id="bandeau" class="bandeau" hidden>Calcul en cours pour Skyval : les réglages sont bloqués le temps du calcul.</div>
+
+  <section>
+    <h2>Connexion</h2>
+    <label for="nom">Nom de cette machine (vu dans l'immeuble Skyval)</label>
+    <input id="nom" type="text" placeholder="ex. PC de Thibaud (Ubuntu)">
+    <label for="cle">Clé de la machine (donnée par Thibaud)</label>
+    <input id="cle" type="password" placeholder="colle la clé ici" autocomplete="off">
+    <details><summary>Avancé</summary>
+      <label for="atlas">Adresse d'Atlas</label>
+      <input id="atlas" type="text">
+    </details>
+    <div class="ligne"><button class="plein" id="connecter">Enregistrer</button><span id="etatAtlas" class="sous"></span></div>
+  </section>
+
+  <section>
+    <h2>Disponibilité</h2>
+    <label class="interrupteur"><input type="checkbox" id="actif"> <span>Disponible pour Skyval</span></label>
+    <label class="interrupteur" style="margin-top:12px;font-weight:400"><input type="checkbox" id="demarrage"> <span>Disponible dès le démarrage du conteneur</span></label>
+    <p class="sous" id="aideActif"></p>
+  </section>
+
+  <section>
+    <h2>Utilisation du PC</h2>
+    <div class="ligne" style="margin-top:0"><span class="grand" id="usageVal">75 %</span><span class="sous" id="usageAide"></span></div>
+    <input type="range" id="usage" min="10" max="100" step="5">
+  </section>
+
+  <section>
+    <h2>Modèle d'IA</h2>
+    <div class="ligne" style="margin-top:0"><button id="bench">Tester ma machine</button><span class="sous" id="benchAide">Mesure ta machine et conseille un modèle selon le curseur.</span></div>
+    <div id="bench-res"></div>
+    <table id="modeles"></table>
+  </section>
+
+  <p class="sous" id="stats"></p>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+let e = null, saisi = false;
+async function api(chemin, corps) {
+  const r = await fetch(chemin, corps ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corps) } : undefined);
+  const d = await r.json();
+  if (!r.ok) { alert(d.erreur || "Erreur"); return null; }
+  return d;
+}
+const fr = (n) => String(n).replace(".", ",");
+const go = (n) => n >= 1e9 ? `${(n / 1e9).toFixed(1)} Go` : `${Math.round(n / 1e6)} Mo`;
+function rendre() {
+  if (!e) return;
+  const c = e.config, bloque = e.reserve;
+  // Pastille : l'état vu par Atlas
+  const p = $("pastille");
+  const [cls, txt] = e.atlas.etat === "a_configurer" ? ["ambre", "À configurer"]
+    : e.atlas.etat === "cle_refusee" ? ["rouge", "Clé refusée"]
+    : e.atlas.etat === "attente" ? ["", "Connexion…"]
+    : e.atlas.etat !== "connecte" ? ["rouge", "Atlas injoignable"]
+    : e.enCalcul || bloque ? ["bleu", "Calcul en cours"]
+    : !e.actif ? ["", "Indisponible"]
+    : !c.modele || !e.installes.includes(c.modele) ? ["ambre", "Aucun modèle"]
+    : ["vert", "Disponible"];
+  p.className = `pastille ${cls}`; p.lastElementChild.textContent = txt;
+  $("bandeau").hidden = !bloque;
+  // Connexion : on ne remplit pas un champ pendant que tu écris
+  if (!saisi) { $("nom").value = c.nom; $("atlas").value = c.atlas; $("cle").placeholder = c.cle ? `enregistrée (${c.cle})` : "colle la clé ici"; }
+  $("etatAtlas").textContent = e.atlas.etat === "connecte" ? "Connecté à Atlas ✓" : e.atlas.erreur ? `Pas connecté : ${e.atlas.erreur}` : "";
+  $("etatAtlas").className = `sous ${e.atlas.etat === "connecte" ? "ok" : e.atlas.erreur ? "ko" : ""}`;
+  // Disponibilité
+  $("actif").checked = e.actif; $("actif").disabled = bloque;
+  $("demarrage").checked = c.demarrage; $("demarrage").disabled = bloque;
+  $("aideActif").textContent = e.actif ? (c.modele && e.installes.includes(c.modele) ? "Skyval peut envoyer des calculs à ce PC." : "Installe un modèle plus bas pour recevoir des calculs.") : "Skyval n'enverra rien à ce PC.";
+  // Utilisation
+  if (document.activeElement !== $("usage")) $("usage").value = c.usage;
+  $("usage").disabled = bloque;
+  majUsage(Number($("usage").value));
+  // Banc d'essai
+  $("bench").disabled = bloque || e.benchEnCours; $("bench").textContent = e.benchEnCours ? "Test en cours…" : "Tester ma machine";
+  const b = c.bench, res = $("bench-res");
+  res.innerHTML = "";
+  if (b?.erreur) res.innerHTML = `<p class="ko">${b.erreur}</p>`;
+  else if (b) {
+    const g = document.createElement("div"); g.className = "grille";
+    const cases = [[b.gpu ? b.gpu.nom : "Aucune", b.gpu ? `carte graphique · ${fr(b.gpu.vram)} Go` : "carte graphique (calcul sur le processeur)"], [`${b.cpus} cœurs`, b.cpu || "processeur"], [`${fr(b.ram)} Go`, "RAM"], [`${fr(b.budget)} Go`, `mémoire autorisée à ${b.usage} %`]];
+    if (b.secondes != null) cases.push([`${fr(b.secondes)} s`, `par vote avec ${b.modele}`]);
+    for (const [v, l] of cases) { const d = document.createElement("div"); d.innerHTML = `<b></b><span></span>`; d.firstChild.textContent = v; d.lastChild.textContent = l; g.append(d); }
+    res.append(g);
+    const conseil = document.createElement("p"); conseil.className = "sous";
+    conseil.textContent = b.conseille ? `Conseillé à ${b.usage} % : ${b.conseille}.${b.secondes > 20 ? " Ton modèle actuel est lent : prends plus petit." : ""}${b.usage !== c.usage ? " (curseur changé : relance le test)" : ""}` : "Aucun modèle ne tient dans la mémoire autorisée : monte le curseur.";
+    res.append(conseil);
+  }
+  // Modèles
+  const t = $("modeles"); t.innerHTML = "";
+  for (const m of e.modeles) {
+    const tr = document.createElement("tr"), td1 = document.createElement("td"), td2 = document.createElement("td");
+    td1.innerHTML = `<b></b>`; td1.firstChild.textContent = m.label;
+    const tags = [];
+    if (c.modele === m.nom && m.installe) tags.push(["actuel", "utilisé"]);
+    if (b?.conseille === m.nom) tags.push(["conseil", "conseillé"]);
+    if (m.possible === false) tags.push(["", "trop gros"]);
+    for (const [k, l] of tags) { const s = document.createElement("span"); s.className = `tag ${k}`; s.textContent = l; td1.append(s); }
+    const sous = document.createElement("div"); sous.className = "sous"; sous.textContent = `${m.nom} · ${fr(m.taille)} Go à télécharger · ${fr(m.memoire)} Go de mémoire`; td1.append(sous);
+    const dl = e.telechargements[m.nom];
+    if (dl?.statut === "en_cours") {
+      const pct = dl.total ? Math.round(dl.fait / dl.total * 100) : 0;
+      const bar = document.createElement("div"); bar.className = "barre"; bar.innerHTML = `<b style="width:${pct}%"></b>`; td1.append(bar);
+      td2.textContent = dl.total ? `${pct} % · ${go(dl.fait)} / ${go(dl.total)}` : "Démarrage…";
+    } else if (m.installe) {
+      if (c.modele !== m.nom) td2.append(bouton("Utiliser", () => api("/api/modele", { nom: m.nom, action: "utiliser" })));
+      td2.append(bouton("Supprimer", () => confirm(`Supprimer ${m.nom} du disque ?`) && api("/api/modele", { nom: m.nom, action: "supprimer" })));
+    } else {
+      if (dl?.statut === "erreur") { const s = document.createElement("div"); s.className = "sous ko"; s.textContent = dl.erreur; td1.append(s); }
+      td2.append(bouton("Installer", () => api("/api/modele", { nom: m.nom, action: "installer" })));
+    }
+    tr.append(td1, td2); t.append(tr);
+  }
+  $("stats").textContent = `${e.stats.calculs} calcul${e.stats.calculs > 1 ? "s faits" : " fait"} depuis le démarrage${e.stats.secondes != null ? ` · dernier : ${fr(e.stats.secondes)} s` : ""} · version ${e.version}`;
+}
+function bouton(txt, f) { const b = document.createElement("button"); b.textContent = txt; b.style.marginLeft = "6px"; b.disabled = e.reserve; b.onclick = async () => { b.disabled = true; const d = await f(); if (d) { e = d; rendre(); } else b.disabled = false; }; return b; }
+function majUsage(u) {
+  $("usageVal").textContent = `${u} %`;
+  const b = e?.materiel ? Math.round((e.materiel.gpu ? e.materiel.gpu.vram : e.materiel.ram / 2) * u / 10) / 10 : null;
+  const pause = u === 100 ? "aucune pause entre deux calculs" : `après 1 s de calcul, le PC se repose ${String(Math.round((100 - u) / u * 10) / 10).replace(".", ",")} s`;
+  $("usageAide").textContent = `${pause}${b != null ? ` · ${String(b).replace(".", ",")} Go de mémoire autorisés` : ""}`;
+}
+["nom", "cle", "atlas"].forEach((id) => { $(id).addEventListener("input", () => { saisi = true; }); });
+$("connecter").onclick = async () => {
+  const d = await api("/api/connexion", { nom: $("nom").value, cle: $("cle").value, atlas: $("atlas").value });
+  if (d) { e = d; saisi = false; $("cle").value = ""; rendre(); }
+};
+$("actif").onchange = async () => { const d = await api("/api/reglages", { actif: $("actif").checked }); if (d) e = d; rendre(); };
+$("demarrage").onchange = async () => { const d = await api("/api/reglages", { demarrage: $("demarrage").checked }); if (d) e = d; rendre(); };
+$("usage").oninput = () => majUsage(Number($("usage").value));
+$("usage").onchange = async () => { const d = await api("/api/reglages", { usage: Number($("usage").value) }); if (d) e = d; rendre(); };
+$("bench").onclick = async () => { const d = await api("/api/bench", {}); if (d) { e = d; rendre(); } };
+async function charger() { try { e = await (await fetch("/api/etat")).json(); rendre(); } catch {} }
+charger(); setInterval(charger, 1500);
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# PC avec une carte graphique NVIDIA (Linux, ou Windows avec Docker Desktop)
+# Lancer : docker compose up -d   ·   Interface : http://localhost:8642
+services:
+  skyval-calcul:
+    image: ghcr.io/thibaud165/skyval-calcul:latest
+    container_name: skyval-calcul
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8642:8642"
+    volumes:
+      - skyval-calcul:/data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+volumes:
+  skyval-calcul:

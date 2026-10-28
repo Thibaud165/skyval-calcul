@@ -1,0 +1,13 @@
+# PC sans carte graphique NVIDIA : le calcul se fait sur le processeur (plus lent, petits modèles seulement)
+# Lancer : docker compose -f docker-compose.cpu.yml up -d   ·   Interface : http://localhost:8642
+services:
+  skyval-calcul:
+    image: ghcr.io/thibaud165/skyval-calcul:latest
+    container_name: skyval-calcul
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8642:8642"
+    volumes:
+      - skyval-calcul:/data
+volumes:
+  skyval-calcul:
