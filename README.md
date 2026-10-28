@@ -87,6 +87,19 @@ docker run --rm --gpus all ubuntu nvidia-smi
 
 Le nom de ta carte doit s'afficher.
 
+**e. Limiter la mémoire de WSL (conseillé)**
+
+Par défaut, WSL garde pour lui la mémoire qu'il a utilisée (le processus « VmmemWSL » du Gestionnaire des tâches peut
+dépasser 15 Go), même quand rien ne tourne. Le modèle d'IA tourne dans la carte graphique, pas dans la RAM : 10 Go
+suffisent. Dans PowerShell :
+
+```powershell
+Set-Content -Path "$env:USERPROFILE\.wslconfig" -Value "[wsl2]`nmemory=10GB`n`n[experimental]`nautoMemoryReclaim=dropcache"
+```
+
+Puis quitte Docker Desktop, lance `wsl --shutdown`, et rouvre Docker Desktop. WSL ne prendra plus que 10 Go au plus
+et rendra la mémoire à Windows quand il n'a rien à faire.
+
 ### Linux
 
 Pour Ubuntu, Debian, Fedora, Linux Mint et la plupart des autres distributions :
@@ -247,6 +260,7 @@ et une clé différents (ex. « PC fixe (Linux) » et « PC fixe (Windows) »). 
 | Le test dit « Aucune » carte graphique | Windows : pilote NVIDIA à jour et Docker Desktop en mode WSL 2. Linux : refais l'installation de `nvidia-container-toolkit`. Puis `docker compose down` et `docker compose up -d`. |
 | `docker compose up` dit « could not select device driver nvidia » | Docker ne voit pas de carte NVIDIA : vérifie avec `docker run --rm --gpus all ubuntu nvidia-smi`, sinon utilise `docker-compose.cpu.yml`. |
 | Linux : « permission denied » sur `docker` | Tu ne t'es pas reconnecté après `usermod`, ou ajoute `sudo` devant la commande. |
+| Windows : « VmmemWSL » prend beaucoup de mémoire | C'est le cache de WSL : voir l'étape 2e (fichier `.wslconfig`), puis `wsl --shutdown`. |
 | Un vote prend plus de 20 s | Prends un modèle plus petit, ou monte le curseur. |
 | « Carte trop faible » | Aucun modèle ne tient dans la carte graphique de ce PC (ou Docker ne la voit pas : voir « Aucune » carte graphique ci-dessus). |
 | « Modèle retiré » | Le modèle utilisé n'est plus dans la liste de Skyval : installe un modèle de la liste, puis supprime l'ancien. |
