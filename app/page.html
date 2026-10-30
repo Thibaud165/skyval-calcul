@@ -105,7 +105,7 @@
   .inter.principal{font:600 1.02rem var(--plex)}
   .inter.secondaire{font-size:.92rem;color:#DCE6F7}
 
-  /* Curseur d'utilisation */
+  /* Curseur : mémoire de la carte graphique partagée avec Skyval */
   .usage-tete{display:flex;align-items:center;gap:16px}
   #usageVal{font:700 2.3rem/1 var(--pixel);color:var(--accent);letter-spacing:-.03em;min-width:4.2ch}
   .rythme{flex:1;min-width:0}
@@ -278,13 +278,13 @@
       <label class="inter secondaire"><input type="checkbox" id="demarrage"> <span>Disponible dès le démarrage du conteneur</span></label>
     </section>
     <section class="carte" aria-labelledby="t-usage">
-      <h2 id="t-usage">Utilisation du PC</h2>
+      <h2 id="t-usage">Mémoire partagée</h2>
       <div class="usage-tete">
-        <output id="usageVal" for="usage">75 %</output>
-        <div class="rythme" aria-hidden="true"><div class="cases" id="cases"></div><div class="legende"><span>calcul</span><span>repos</span></div></div>
+        <output id="usageVal" for="usage">12 Go</output>
+        <div class="rythme" aria-hidden="true"><div class="cases" id="cases"></div><div class="legende"><span>Skyval</span><span>libre</span></div></div>
       </div>
-      <input type="range" id="usage" min="10" max="100" step="5" aria-label="Utilisation du PC, en pourcentage" aria-describedby="usageAide">
-      <div class="graduations" aria-hidden="true"><span>10 %</span><span>50 %</span><span>100 %</span></div>
+      <input type="range" id="usage" min="10" max="100" step="5" aria-label="Mémoire de la carte graphique partagée avec Skyval" aria-describedby="usageAide">
+      <div class="graduations" aria-hidden="true"><span id="grad10">10 %</span><span id="grad50">50 %</span><span id="grad100">100 %</span></div>
       <p class="aide" id="usageAide"></p>
     </section>
   </div>
@@ -384,14 +384,14 @@ function rendreBench(b, c, tropFaible) {
     [b.gpu ? b.gpu.nom : "Aucune", b.gpu ? `carte graphique · ${fr(b.gpu.vram)} Go` : "carte graphique (calcul sur le processeur)"],
     [`${b.cpus} cœurs`, b.cpu || "processeur"],
     [`${fr(b.ram)} Go`, "RAM"],
-    [`${fr(b.budget)} Go`, `mémoire autorisée à ${b.usage} %`],
+    [`${fr(b.budget)} Go`, "mémoire partagée"],
     b.secondes != null ? [`${fr(b.secondes)} s`, `par vote avec ${b.modele}`] : ["–", b.modele ? "vitesse : mesurée au premier calcul" : "vitesse : installe un modèle"],
-    [b.conseille || "Aucun", `modèle conseillé à ${b.usage} %`],
+    [b.conseille || "Aucun", `modèle conseillé pour ${fr(b.budget)} Go`],
   ];
   for (const [v, l] of cases) { const d = el("div", "tuile"); d.append(el("b", null, v), el("span", null, l)); g.append(d); }
   res.append(g);
   res.append(el("p", b.conseille ? "conseil" : "conseil ko", b.conseille
-    ? `Conseillé à ${b.usage} % : ${b.conseille}.${b.secondes > 20 ? " Ton modèle actuel est lent : prends plus petit." : ""}`
+    ? `Conseillé pour ${fr(b.budget)} Go : ${b.conseille}.${b.secondes > 20 ? " Ton modèle actuel est lent : prends plus petit." : ""}`
     : tropFaible ? "Ce PC n'a pas de carte graphique assez puissante pour Skyval : aucun modèle ne tient dedans."
     : "Aucun modèle ne tient dans la mémoire autorisée : monte le curseur."));
 }
@@ -467,16 +467,18 @@ function bouton(txt, cle, f, { cls = "", icone = null, aria = null } = {}) {
   return b;
 }
 
-// Curseur : explication de la pause et de la mémoire autorisée, et le rythme calcul / repos en 20 cases
+// Curseur : la mémoire de la carte graphique (sans carte : la moitié de la RAM) que Skyval a le droit de prendre, en Go.
+// Aucune pause entre les calculs : le modèle choisi doit seulement tenir dans cette mémoire
 const cases = $("cases");
 for (let i = 0; i < 20; i++) cases.append(el("i"));
+const memoire = (u) => (e?.materiel ? Math.round((e.materiel.gpu ? e.materiel.gpu.vram : e.materiel.ram / 2) * u / 10) / 10 : null);
 function majUsage(u) {
-  $("usageVal").textContent = `${u} %`;
+  const b = memoire(u), total = memoire(100);
+  $("usageVal").textContent = b != null ? `${fr(b)} Go` : `${u} %`;
   $("usage").style.setProperty("--p", `${(u - 10) / 90 * 100}%`);
   [...cases.children].forEach((c, i) => c.classList.toggle("on", i < Math.round(u / 5)));
-  const b = e?.materiel ? Math.round((e.materiel.gpu ? e.materiel.gpu.vram : e.materiel.ram / 2) * u / 10) / 10 : null;
-  const pause = u === 100 ? "Aucune pause entre deux calculs" : `Après 1 s de calcul, le PC se repose ${fr(Math.round((100 - u) / u * 10) / 10)} s`;
-  $("usageAide").textContent = `${pause}${b != null ? ` · ${fr(b)} Go de mémoire autorisés` : ""}.`;
+  for (const p of [10, 50, 100]) $(`grad${p}`).textContent = memoire(p) != null ? `${fr(memoire(p))} Go` : `${p} %`;
+  $("usageAide").textContent = total != null ? `Sur ${fr(total)} Go ${e.materiel.gpu ? "de carte graphique" : "de mémoire"}. Le modèle doit tenir dedans.` : "";
 }
 
 ["nom", "cle", "atlas"].forEach((id) => { $(id).addEventListener("input", () => { saisi = true; }); });

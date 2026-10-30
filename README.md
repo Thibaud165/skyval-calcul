@@ -301,13 +301,13 @@ Dans la zone **Connexion** :
 
 ⚠️ Tu vois **Atlas injoignable** ou **Pas connecté** ? Va à l'[étape 4.6](#46-si-atlas-reste-injoignable).
 
-### 4.3 Régler l'utilisation du PC
+### 4.3 Régler la mémoire partagée
 
-Dans la zone **Utilisation du PC**, vérifie que le curseur est à **100 %** (c'est le réglage de départ ; s'il est plus bas, pousse-le à fond à droite).
+Dans la zone **Mémoire partagée**, vérifie que le curseur est à fond à droite (c'est le réglage de départ) : tu dois voir toute la mémoire de ta carte, par exemple **12 Go**.
 
-Pourquoi : le curseur dit quelle part de ton PC Skyval peut prendre. Plus bas (par exemple 50 %), le PC se repose entre deux calculs, mais Skyval n'a droit qu'à une partie de la mémoire de la carte. Sur une carte de 12 Go, il faut 100 %, sinon l'IA ne tient pas.
+Pourquoi : le curseur dit combien de mémoire de ta carte graphique Skyval peut prendre. L'IA doit tenir dedans : sur une carte de 12 Go, il faut tout, sinon elle ne tient pas. Il n'y a jamais de pause entre deux calculs.
 
-✅ Tu dois voir **100 %** et « Aucune pause entre deux calculs ».
+✅ Tu dois voir toute la mémoire de ta carte, par exemple **12 Go** et « Sur 12 Go de carte graphique ».
 
 ### 4.4 Installer l'IA
 
@@ -396,7 +396,7 @@ Pour le reste, ouvre un terminal **dans le dossier `skyval-calcul`** ([étape 2.
 | **Clé refusée** | La clé est mal collée, ou elle a été supprimée. Recolle-la, ou demande-en une nouvelle à l'administrateur de Skyval. |
 | Dans la zone **Cette machine**, la carte graphique est « Aucune » | Docker ne voit pas ta carte. Windows : pilote NVIDIA à jour et Docker Desktop en mode WSL 2. Ubuntu : refais l'[étape 3.3](#33-relier-docker-à-la-carte-nvidia-container-toolkit). Puis `docker compose down` et `docker compose up -d`. |
 | **Carte trop faible** | Ta carte graphique a moins de 12 Go (ou Docker ne la voit pas : voir la ligne au-dessus). Ce PC ne peut pas recevoir de calculs. |
-| « Aucun modèle ne tient dans la mémoire autorisée : monte le curseur » | Pousse le curseur **Utilisation du PC** à 100 % ([étape 4.3](#43-régler-lutilisation-du-pc)). |
+| « Aucun modèle ne tient dans la mémoire autorisée : monte le curseur » | Pousse le curseur **Mémoire partagée** à fond à droite ([étape 4.3](#43-régler-la-mémoire-partagée)). |
 | **Modèle retiré**, ou une zone **Anciens modèles** | Ce modèle n'est plus utilisé par Skyval. Installe gemma3:12b ([étape 4.4](#44-installer-lia)), puis supprime l'ancien avec sa poubelle. |
 | Un calcul dure plus de 20 secondes par vote | Mets le curseur à 100 %. Si tu utilises gemma4:26b, reviens à gemma3:12b. |
 | Windows : « VmmemWSL » prend beaucoup de mémoire dans le Gestionnaire des tâches | Refais l'[étape 2.3](#23-limiter-la-mémoire-de-wsl), puis rouvre Docker Desktop. |

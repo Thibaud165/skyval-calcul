@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import os from "node:os";
 import { spawn, execFile } from "node:child_process";
 
-const VERSION = "1.5.0";
+const VERSION = "1.5.1";
 const DATA = process.env.DATA || "/data";
 const CONFIG = `${DATA}/config.json`;
 const OLLAMA = process.env.OLLAMA_URL || "http://127.0.0.1:11434";      // OLLAMA_URL : un Ollama déjà lancé ailleurs (tests)
@@ -71,7 +71,7 @@ const catalogue = (nom) => MODELES.find((m) => m.nom === nom);
 const anciens = () => installes.filter((n) => !catalogue(n));
 // Prêt à calculer : un modèle du catalogue, installé, qui tient dans la carte. Avec un ancien modèle, plus aucun calcul
 const pret = () => { const m = catalogue(config.modele); return Boolean(m && installes.includes(m.nom) && tient(m)); };
-const threads = () => Math.max(1, Math.round(os.cpus().length * config.usage / 100));
+const threads = () => Math.max(1, os.cpus().length);                    // le curseur ne règle que la mémoire de la carte, plus le processeur
 
 async function generer(prompt, options = {}, ms = 300000, images = null) {   // images : photos en base64 (modèle vision seulement)
   // Modèle qui réfléchit : think: false (au niveau de la requête, pas dans options). Gemma 4 écrit quand même un bloc de
@@ -172,9 +172,6 @@ async function calculer(t) {
   }
   await atlasPost("/calcul/resultat", resultat, 15000).catch(() => {});
   enCalcul = false;
-  // Curseur d'utilisation : à 50 %, le PC se repose autant qu'il a calculé (30 s max)
-  const pause = Math.min(30000, duree * (100 - config.usage) / config.usage);
-  if (pause > 200) await dormir(pause);
 }
 
 // ---------- Interface web (http://localhost:8642) ----------
