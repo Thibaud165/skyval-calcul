@@ -369,7 +369,7 @@ Pour le reste, ouvre un terminal **dans le dossier `skyval-calcul`** ([étape 2.
 
 | Pour… | Tape |
 |---|---|
-| Mettre à jour | `docker compose pull` puis `docker compose up -d` |
+| Mettre à jour | Rien à faire : le service « maj » vérifie toutes les heures et installe la nouvelle version tout seul (Skyval Calcul redémarre en quelques secondes). À la main si tu es pressé : `docker compose pull` puis `docker compose up -d` |
 | Arrêter | `docker compose down` |
 | Relancer | `docker compose up -d` |
 | Désinstaller (IA comprise) | `docker compose down -v`, puis supprime le dossier `skyval-calcul` |

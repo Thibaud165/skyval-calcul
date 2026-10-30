@@ -7,6 +7,8 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:8642:8642"
+    labels:
+      - com.centurylinklabs.watchtower.enable=true   # mis à jour tout seul par le service « maj » ci-dessous
     volumes:
       - skyval-calcul:/data
     deploy:
@@ -16,5 +18,18 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+  # Mise à jour automatique : toutes les heures, regarde si une nouvelle image Skyval Calcul est publiée ; si oui, la
+  # télécharge et relance Skyval Calcul (comme « pull » puis « up -d »). Ne touche à aucun autre conteneur du PC.
+  # Watchtower d'origine (containrrr) est archivé depuis fin 2025 : nickfedor/watchtower est la suite maintenue
+  maj:
+    image: nickfedor/watchtower:latest
+    container_name: skyval-calcul-maj
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_LABEL_ENABLE=true
+      - WATCHTOWER_POLL_INTERVAL=3600
+      - WATCHTOWER_CLEANUP=true
 volumes:
   skyval-calcul:

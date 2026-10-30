@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import os from "node:os";
 import { spawn, execFile } from "node:child_process";
 
-const VERSION = "1.4.4";
+const VERSION = "1.5.0";
 const DATA = process.env.DATA || "/data";
 const CONFIG = `${DATA}/config.json`;
 const OLLAMA = process.env.OLLAMA_URL || "http://127.0.0.1:11434";      // OLLAMA_URL : un Ollama déjà lancé ailleurs (tests)
@@ -20,7 +20,7 @@ const NUM_CTX = 2048;                                                    // un m
 // Validés avec « Tester le réseau » : gemma3:12b 3/3 à l'unanimité. Les ministral-3 (8b, 14b) hésitaient sur des cas
 // évidents (1/3 et 2/3) : retirés, comme gemma3:1b et 4b
 const MODELES = [
-  { nom: "gemma3:12b", taille: 8.1, memoire: 9.5, label: "12b · validé par Skyval" },
+  { nom: "gemma3:12b", taille: 8.1, memoire: 9.5, label: "12b · validé par Skyval", vision: true },   // vision : sait décrire les photos des clients (Atlas, photos.mjs)
   { nom: "gemma4:26b", taille: 18.7, memoire: 20.5, label: "26b · pour les cartes de 24 Go", pense: true },
 ];
 const PAGE = readFileSync(new URL("./page.html", import.meta.url), "utf8");
@@ -73,13 +73,13 @@ const anciens = () => installes.filter((n) => !catalogue(n));
 const pret = () => { const m = catalogue(config.modele); return Boolean(m && installes.includes(m.nom) && tient(m)); };
 const threads = () => Math.max(1, Math.round(os.cpus().length * config.usage / 100));
 
-async function generer(prompt, options = {}, ms = 300000) {
+async function generer(prompt, options = {}, ms = 300000, images = null) {   // images : photos en base64 (modèle vision seulement)
   // Modèle qui réfléchit : think: false (au niveau de la requête, pas dans options). Gemma 4 écrit quand même un bloc de
   // réflexion vide (4 jetons) avant sa réponse : on lui laisse 16 jetons de plus pour qu'il ne mange pas le OUI ou NON
   const pense = catalogue(config.modele)?.pense;
   const opts = { ...options, num_ctx: NUM_CTX, num_thread: threads() };
   if (pense && opts.num_predict > 0) opts.num_predict += 16;
-  const d = await ollama("/api/generate", { model: config.modele, prompt, stream: false, ...(pense ? { think: false } : {}), keep_alive: "30s", options: opts }, ms);   // modèle déchargé 30 s après le dernier calcul : la carte graphique se libère vite
+  const d = await ollama("/api/generate", { model: config.modele, prompt, ...(images?.length ? { images } : {}), stream: false, ...(pense ? { think: false } : {}), keep_alive: "30s", options: opts }, ms);   // modèle déchargé 30 s après le dernier calcul : la carte graphique se libère vite
   return d.response;
 }
 
@@ -125,7 +125,7 @@ async function installer(nom) {
 }
 
 // ---------- Atlas : on s'annonce et on attend un calcul (attente longue, 25 s max côté Atlas) ----------
-const annonce = () => ({ nom: config.nom, version: VERSION, actif: actif && pret(), modele: config.modele || null, usage: config.usage, gpu: materiel?.gpu?.nom || null, vram: materiel?.gpu?.vram || null, secondes: vitesse(), calculs: stats.calculs, reserve: Boolean(reserve) });
+const annonce = () => ({ nom: config.nom, version: VERSION, actif: actif && pret(), modele: config.modele || null, vision: Boolean(catalogue(config.modele)?.vision), usage: config.usage, gpu: materiel?.gpu?.nom || null, vram: materiel?.gpu?.vram || null, secondes: vitesse(), calculs: stats.calculs, reserve: Boolean(reserve) });
 async function atlasPost(chemin, corps, ms, signal) {
   return fetch(`${config.atlas.replace(/\/$/, "")}${chemin}`, { method: "POST", headers: { "Content-Type": "application/json", "X-Calcul-Cle": config.cle }, body: JSON.stringify(corps), signal: signal ? AbortSignal.any([AbortSignal.timeout(ms), signal]) : AbortSignal.timeout(ms) });
 }
@@ -161,7 +161,7 @@ async function calculer(t) {
   let resultat;
   try {
     if (!annonce().actif) throw new Error("PC rendu indisponible");        // rendu indisponible juste avant que le calcul arrive
-    resultat = { id: t.id, texte: await generer(t.prompt, t.options) };
+    resultat = { id: t.id, texte: await generer(t.prompt, t.options, 300000, t.images) };
   }
   catch (e) { resultat = { id: t.id, erreur: e.message }; }
   const duree = Date.now() - debut;
